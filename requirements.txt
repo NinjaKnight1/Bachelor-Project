@@ -1,0 +1,6 @@
+fastapi
+fastapi-cors
+uvicorn
+pm4py
+lxml
+graphviz

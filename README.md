@@ -6,10 +6,12 @@ You first have to download the nodes modules you have to run
 
 ```
 npm install
+pip install equirements.txt
 ```
 
 To run the project you have to run
 
 ```
+python bpmn-dpn/api.py
 npm start
 ```
