@@ -1,0 +1,31 @@
+{
+  "name": "bpmn-js-example-modeler",
+  "version": "0.0.0",
+  "description": "A simple modeler built with bpmn-js",
+  "scripts": {
+    "all": "run-s build",
+    "build": "webpack --mode production",
+    "dev": "webpack-dev-server --static=public --open",
+    "start": "run-s dev"
+  },
+  "keywords": [
+    "bpmnjs-example"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "copy-webpack-plugin": "^13.0.0",
+    "css-loader": "^7.1.2",
+    "npm-run-all2": "^7.0.2",
+    "raw-loader": "^4.0.0",
+    "style-loader": "^4.0.0",
+    "webpack": "^5.97.1",
+    "webpack-cli": "^6.0.1",
+    "webpack-dev-server": "^5.2.0"
+  },
+  "dependencies": {
+    "bpmn-js": "^18.3.2",
+    "diagram-js": "^15.1.0",
+    "dmn-js": "^17.2.0",
+    "jquery": "^3.3.1"
+  }
+}
