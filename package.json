@@ -1,7 +1,7 @@
 {
-  "name": "bpmn-js-example-modeler",
+  "name": "bachelor-project-dbpmn-to-dpn",
   "version": "0.0.0",
-  "description": "A simple modeler built with bpmn-js",
+  "description": "Automated Conversion of Integrated BPMN and DMN Models into Data Petri Nets",
   "scripts": {
     "all": "run-s build",
     "build": "webpack --mode production",
@@ -9,7 +9,7 @@
     "start": "run-s dev"
   },
   "keywords": [
-    "bpmnjs-example"
+    "bpmnjs,dmnjs,dpn"
   ],
   "license": "MIT",
   "devDependencies": {
