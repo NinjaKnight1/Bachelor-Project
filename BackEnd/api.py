@@ -36,7 +36,7 @@ async def convert_bpmn(file: UploadFile = File(...)):
         bpmn_model = pm4py.read_bpmn(file_path)
 
         # Convert BPMN to Petri Net
-        petri_net, im, fm = pm4py.objects.conversion.bpmn.variants.to_petri_net.apply(bpmn_model)
+        petri_net, im, fm = pm4py.convert_to_petri_net(bpmn_model)
 
         # Export the Petri net to PNML using the exporter
         pm4py.write_pnml(petri_net, im, fm, file_path.replace(".bpmn", ".pnml"))
