@@ -4,6 +4,7 @@ import 'bpmn-js/dist/assets/bpmn-font/css/bpmn-embedded.css';
 
 import BpmnModeler from 'bpmn-js/lib/Modeler';
 import diagramXML from '../resources/newDiagram.bpmn';
+import { is } from 'bpmn-js/lib/util/ModelUtil'; // Utility to check element type
 
 const modeler = new BpmnModeler({
   container: '#bpmn-canvas',
@@ -12,6 +13,20 @@ const modeler = new BpmnModeler({
 async function openDiagram(xml) {
   try {
     await modeler.importXML(xml);
+
+    // Add event listener for right-click (context menu) on elements
+    modeler.on('element.contextmenu', function (event) {
+      event.originalEvent.preventDefault(); // Prevent the default browser context menu
+      const element = event.element;
+
+      // Check if the right-clicked element is a BPMN Task
+      if (is(element, 'bpmn:Task')) {
+        console.log('Task element right-clicked:', element);
+        alert(`Right-clicked on Task: ${element.id}`);
+      } else {
+        console.log('Right-clicked on non-task element:', element);
+      }
+    });
   } catch (err) {
     console.error('Error loading BPMN diagram:', err);
   }
