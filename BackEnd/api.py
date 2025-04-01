@@ -35,7 +35,6 @@ async def convert_bpmn(file: UploadFile = File(...)):
         # Read BPMN model from saved file
         bpmn_model = pm4py.read_bpmn(file_path)
 
-
         # Convert BPMN to Petri Net
         petri_net, im, fm = pm4py.convert_to_petri_net(bpmn_model)
 
