@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="https://www.omg.org/spec/DMN/20191111/MODEL/"
+             id="Definitions_1"
+             name="Decisions"
+             namespace="http://example.com/decisions">
+  <decision id="Decision_1" name="Decision_1">
+    <decisionTable id="DecisionTable_1" hitPolicy="UNIQUE">
+      <input id="input_1">
+        <inputExpression id="inputExpression_1" typeRef="string">
+          <text>inputVar</text>
+        </inputExpression>
+      </input>
+      <output id="output_1" typeRef="string" />
+    </decisionTable>
+  </decision>
+
+  <!-- You can add more <decision> blocks here for other tasks -->
+</definitions>

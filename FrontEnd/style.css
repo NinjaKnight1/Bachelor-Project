@@ -1,0 +1,17 @@
+.canvas {
+  height: 93vh;
+  width: auto;
+}
+
+#export-button {
+  background-color: red;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  font-size: 16px;
+  cursor: pointer;
+}
+
+#export-button:hover {
+  background-color: darkred;
+}
