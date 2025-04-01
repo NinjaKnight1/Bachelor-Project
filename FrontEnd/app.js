@@ -104,7 +104,7 @@ function rightClickOnBPMN() {
     const element = event.element;
 
     // Check if the right-clicked element is a BPMN Task
-    if (is(element, 'bpmn:Task')) {
+    if (is(element, 'bpmn:BusinessRuleTask')) {
       const taskBusinessObject = element.businessObject;
       taskBusinessObject.dmnDecisionRef = element.id;
 

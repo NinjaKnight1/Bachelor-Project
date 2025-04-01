@@ -1,18 +1,27 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <definitions xmlns="https://www.omg.org/spec/DMN/20191111/MODEL/"
-             id="Definitions_1"
-             name="Decisions"
-             namespace="http://example.com/decisions">
-  <decision id="Decision_1" name="Decision_1">
-    <decisionTable id="DecisionTable_1" hitPolicy="UNIQUE">
-      <input id="input_1">
-        <inputExpression id="inputExpression_1" typeRef="string">
-          <text>inputVar</text>
+             xmlns:dmndi="https://www.omg.org/spec/DMN/20191111/DMNDI/"
+             xmlns:dc="http://www.omg.org/spec/DMN/20191111/DC/"
+             xmlns:di="http://www.omg.org/spec/DMN/20191111/DI/"
+             id="definitions"
+             name="definitions"
+             namespace="http://camunda.org/schema/1.0/dmn">
+  <decision id="decision" name="Decision">
+    <decisionTable id="decisionTable">
+      <input id="input1">
+        <inputExpression id="inputExpression1" typeRef="string">
+          <text>Input</text>
         </inputExpression>
       </input>
-      <output id="output_1" typeRef="string" />
+      <output id="output1" name="Output" typeRef="string" />
+      <rule id="rule1">
+        <inputEntry id="inputEntry1">
+          <text>"A"</text>
+        </inputEntry>
+        <outputEntry id="outputEntry1">
+          <text>"Result A"</text>
+        </outputEntry>
+      </rule>
     </decisionTable>
   </decision>
-
-  <!-- You can add more <decision> blocks here for other tasks -->
 </definitions>
