@@ -204,13 +204,13 @@ async function createNewDecision(decisionId) {
   });
   inputClause.inputExpression = inputExpression;
 
-  const output = dmnModdle.create('dmn:Output', {
-    id: `${decisionId}_output`,
+  const outputClause = dmnModdle.create('dmn:OutputClause', {
+    id: `${decisionId}_outputClause`,
     typeRef: 'string'
   });
 
   newDecisionTable.input = [inputClause];
-  newDecisionTable.output = [output];
+  newDecisionTable.output = [outputClause];
   newDecision.decisionTable = newDecisionTable;
 
   // 4) Push to definitions.drgElement
