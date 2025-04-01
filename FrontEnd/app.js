@@ -2,6 +2,12 @@ import 'bpmn-js/dist/assets/diagram-js.css';
 import 'bpmn-js/dist/assets/bpmn-js.css';
 import 'bpmn-js/dist/assets/bpmn-font/css/bpmn-embedded.css';
 
+import 'dmn-js/dist/assets/diagram-js.css';
+import 'dmn-js/dist/assets/dmn-js-decision-table.css';
+import 'dmn-js/dist/assets/dmn-font/css/dmn.css';
+import 'dmn-js/dist/assets/dmn-js-shared.css';
+import 'dmn-js/dist/assets/dmn-js-decision-table-controls.css';
+
 import BpmnModeler from 'bpmn-js/lib/Modeler';
 import DmnModeler from 'dmn-js/lib/Modeler';
 import DmnModdle from 'dmn-moddle';
