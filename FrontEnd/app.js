@@ -136,7 +136,7 @@ async function exportAndConvert() {
 
 async function openTableFromTaskID(decisionId) {
   // 1) See if the DMN file has a <decision id="Task_1"> already
-  await openDiagramDMN(dmnDiagramXML);
+  // await openDiagramDMN(dmnDiagramXML);
 
   // 3) Switch the UI from BPMN view to DMN view
   document.getElementById('bpmn-container').style.display = 'none';
