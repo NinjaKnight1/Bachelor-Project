@@ -35,11 +35,9 @@ async def convert_bpmn(file: UploadFile = File(...)):
         # Read BPMN model from saved file
         bpmn_model = pm4py.read_bpmn(file_path)
 
-        # Convert BPMN to Process Tree
-        process_tree = pm4py.convert_to_process_tree(bpmn_model)
 
         # Convert BPMN to Petri Net
-        petri_net, im, fm = pm4py.convert_to_petri_net(process_tree)
+        petri_net, im, fm = pm4py.convert_to_petri_net(bpmn_model)
 
         # Export the Petri net to PNML using the exporter
         pm4py.write_pnml(petri_net, im, fm, file_path.replace(".bpmn", ".pnml"))
