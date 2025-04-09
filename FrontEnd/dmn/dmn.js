@@ -5,82 +5,122 @@ import 'dmn-js/dist/assets/dmn-js-shared.css';
 import 'dmn-js/dist/assets/dmn-js-decision-table-controls.css';
 
 import { dmnModeler } from '../app.js';
-import { dmnModdle } from '../app.js';
 
 
-export async function openTableFromTaskID(dmnModeler, decisionId) {
+export async function OLDopenTableFromTaskID(dmnModeler, decisionId) {
+
     // 1) See if the DMN file has a <decision id="Task_1"> already
     // await openDiagramDMN(dmnDiagramXML);
-
+    dmnModeler.on('views.changed', function(event) {
+        console.log("Views changed event:", event);
+    });
     // 3) Switch the UI from BPMN view to DMN view
+
+    const allViews = dmnModeler.getViews();
+
+    const activeViewer = dmnModeler.getActiveViewer();
+    // let views = dmnModeler._getViewProviders().opens();
+    console.log("activeViewer", activeViewer);
+    console.log("dmn modeler", dmnModeler);
+    // console.log("views", views);
+    console.log("activeViewer getmodules", activeViewer.getModules());
+    const viewdrd = activeViewer.get('viewDrd');
+    console.log("viewdrd", viewdrd);
+    
+    if (!activeViewer) {
+        console.error("No active viewer found.");
+        return;
+    }
+
+    // 3) See if the DMN has a <decision> with the ID
+    const existingView = findDecisionView(decisionId);
+    console.log("existingViews ", existingView);
+
+    // 4) If no existing decision, create one
+    if (!existingView) {
+        await createNewDecision(decisionId);
+
+        // Re-check after creation
+        let newView = findDecisionView(decisionId);
+        if (newView) {
+            console.log("New decision created:", newView);
+            dmnModeler.open(newView);            
+        } else {
+            console.error("Failed to create new decision:", decisionId);
+            return;
+        }
+    } else {
+        // If it exists, just show it
+        dmnModeler.open(existingView);
+    }
     document.getElementById('bpmn-container').style.display = 'none';
     document.getElementById('dmn-container').style.display = 'block';
 
-    // 4) Show that decision's table
-    dmnModeler.once('views.changed', async function handleDMNViewChanged() {
-
-        // 2a) Check if we have an active viewer
-        const activeViewer = dmnModeler.getActiveViewer?.();
-        if (!activeViewer) {
-            return;
-        }
-
-        // 3) See if the DMN has a <decision> with the ID
-        const existingView = findDecisionView(decisionId);
-
-        // 4) If no existing decision, create one
-        if (!existingView) {
-            await createNewDecision(decisionId);
-
-            // Re-check after creation
-            const newlyCreatedView = findDecisionView(decisionId);
-            if (newlyCreatedView) {
-                dmnModeler.showDecision(decisionId);
-            }
-        } else {
-            // If it exists, just show it
-            dmnModeler.showDecision(decisionId);
-        }
-    });
 }
 
 
+export async function openTableFromTaskID(dmnModeler, decisionId) {
+    const activeViewer = dmnModeler.getActiveViewer();
+
+    if (!activeViewer) {
+        console.error("No active viewer found.");
+        return;
+    }
+    const existingView = findDecisionView(decisionId);
+
+    if (!existingView) {
+        await createNewDecision(decisionId);
+
+        let newView = findDecisionView(decisionId);
+        if (newView) {
+            console.log("New decision created:", newView);
+            dmnModeler.open(newView);            
+        } else {
+            console.error("Failed to create new decision:", decisionId);
+            return;
+        }
+    } else {
+        dmnModeler.open(existingView);
+    }
+    document.getElementById('bpmn-container').style.display = 'none';
+    document.getElementById('dmn-container').style.display = 'block';
+
+}
+
+// Function to find the view 
 function findDecisionView(decisionId) {
     if (!dmnModeler.getActiveViewer()) {
         return null;
     }
-    const allViews = dmnModeler.getViews?.() || [];
-    return allViews.find(view => view.element?.id === decisionId);
+    const allViews = dmnModeler.getViews();
+    return allViews.find(view => view.element.id === decisionId);
 }
 
 
 async function createNewDecision(decisionId) {
-
-    // 1) Save the current DMN as XML
-    const { xml: oldXml } = await dmnModeler.saveXML({ format: true });
-
-    // 2) Parse it using our own dmnModdle instance
-    const { rootElement: definitions } = await dmnModdle.fromXML(oldXml);
-
-    // 3) Create your new Decision + DecisionTable
+    let dmnModdle = dmnModeler._moddle;
+    let definitions = dmnModeler.getDefinitions();
+    console.log("definition", definitions);
     const newDecision = dmnModdle.create('dmn:Decision', {
         id: decisionId,
-        name: decisionId
+        name: `Decision`,
     });
-
-    const newDecisionTable = dmnModdle.create('dmn:DecisionTable', {
-        id: `DecisionTable_${decisionId}`,
+    
+    const newDecisionTable = await dmnModdle.create('dmn:DecisionTable', {
+        id: `${decisionId}_decisionTable`,
         hitPolicy: 'UNIQUE'
     });
-
+    
     const inputClause = dmnModdle.create('dmn:InputClause', {
         id: `${decisionId}_inputClause`
     });
+
     const inputExpression = dmnModdle.create('dmn:LiteralExpression', {
         id: `${decisionId}_inputExpression`,
-        text: 'inputVar',
+        text: '',
         typeRef: 'string'
     });
+
     inputClause.inputExpression = inputExpression;
 
     const outputClause = dmnModdle.create('dmn:OutputClause', {
@@ -90,16 +130,15 @@ async function createNewDecision(decisionId) {
 
     newDecisionTable.input = [inputClause];
     newDecisionTable.output = [outputClause];
-    newDecision.decisionTable = newDecisionTable;
+    
+    newDecisionTable.$parent = newDecision;
+    inputClause.$parent = newDecisionTable; 
+    outputClause.$parent = newDecisionTable;
+    inputExpression.$parent = inputClause;
+    newDecision.$parent = definitions;
+    newDecision.decisionLogic = newDecisionTable;
 
-    // 4) Push to definitions.drgElement
-    definitions.drgElement = definitions.drgElement || [];
     definitions.drgElement.push(newDecision);
 
-    // 5) Convert definitions -> updated XML
-    const { xml: newXml } = await dmnModdle.toXML(definitions, { format: true });
-
-    // 6) Re-import into dmnModeler
-    await dmnModeler.importXML(newXml);
+    dmnModeler._setDefinitions(definitions);
 }
-
