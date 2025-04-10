@@ -14,6 +14,6 @@ graphviz also needs to be installed
 To run the project you have to run
 
 ```
-python bpmn-dpn/api.py
+python BackEnd/api.py
 npm start
 ```

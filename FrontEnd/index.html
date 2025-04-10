@@ -1,28 +1,23 @@
 <!DOCTYPE html>
 <html>
+
 <head>
   <title>bpmn-js modeler demo</title>
-  <style>
-    .canvas {
-      height: 93vh;
-      width: 93vw;
-    }
-    #export-button {
-      background-color: red;
-      color: white;
-      border: none;
-      padding: 10px 20px;
-      font-size: 16px;
-      cursor: pointer;
-    }
-    #export-button:hover {
-      background-color: darkred;
-    }
-  </style>
+  <link rel="stylesheet" href="style.css"> <!-- Ensure the correct path to style.css -->
 </head>
+
 <body>
-  <div class="canvas" id="bpmn-canvas"></div>
-  <button id="export-button">Export and Convert</button>
+  <div id="bpmn-container">
+    <div class="canvas" id="bpmn-canvas"></div>
+    <button id="export-button">Export and Convert</button>
+  </div>
+
+  <div id="dmn-container" style="display: none;">
+    <div class="canvas" id="dmn-canvas"></div>
+    <button id="dmn-back-button">Back to BPMN</button>
+  </div>
+
   <script src="app.js"></script>
 </body>
+
 </html>

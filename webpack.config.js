@@ -2,7 +2,7 @@ const CopyWebpackPlugin = require('copy-webpack-plugin');
 
 module.exports = {
   entry: {
-    bundle: ['./FrontEnd/app.js']
+    bundle: ['./FrontEnd/app.js', './FrontEnd/style.css'] // Ensure style.css is included here
   },
   output: {
     path: __dirname + '/public',
@@ -19,6 +19,10 @@ module.exports = {
       },
       {
         test: /\.bpmn$/,
+        use: 'raw-loader'
+      },
+      {
+        test: /\.dmn$/,
         use: 'raw-loader'
       }
     ]

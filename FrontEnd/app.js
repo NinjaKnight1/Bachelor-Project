@@ -2,42 +2,66 @@ import 'bpmn-js/dist/assets/diagram-js.css';
 import 'bpmn-js/dist/assets/bpmn-js.css';
 import 'bpmn-js/dist/assets/bpmn-font/css/bpmn-embedded.css';
 
+import { openTableFromTaskID } from'./dmn/dmn.js';
+
 import BpmnModeler from 'bpmn-js/lib/Modeler';
-import diagramXML from '../resources/newDiagram.bpmn';
+import DmnModeler from 'dmn-js/lib/Modeler';
+import DmnModdle from 'dmn-moddle';
 import { is } from 'bpmn-js/lib/util/ModelUtil'; // Utility to check element type
 
-const modeler = new BpmnModeler({
-  container: '#bpmn-canvas',
-});
+// BPMN and DMN diagram XML files
+import bpmnDiagramXML from '../resources/defaultBpmnDiagram.bpmn';
+import dmnDiagramXML from '../resources/defaultDmnDiagram.dmn';
 
-async function openDiagram(xml) {
+// At the top level, create a moddle instance (once).
+export const dmnModdle = new DmnModdle();
+
+let activeTaskId = null;
+
+let bpmnModeler;
+export let dmnModeler;
+
+async function init() {
+
+  bpmnModeler = new BpmnModeler({
+    container: '#bpmn-canvas',
+  });
+  dmnModeler = new DmnModeler({
+    container: '#dmn-canvas',
+  });
+
+  await openDiagramBPMN(bpmnDiagramXML);
+  await openDiagramDMN(dmnDiagramXML);
+
+  rightClickOnBPMN();
+
+  // Add event listener to the button
+  document.getElementById("export-button").addEventListener("click", exportAndConvert);
+  document.getElementById("dmn-back-button").addEventListener("click", () => goBackToBpmn(dmnModeler));}
+
+async function openDiagramDMN(xml) {
   try {
-    await modeler.importXML(xml);
+    await dmnModeler.importXML(xml);
+    console.log("DMN loaded.");
+  } catch (err) {
+    console.error('Error loading DMN diagram:', err);
+  }
+}
 
-    // Add event listener for right-click (context menu) on elements
-    modeler.on('element.contextmenu', function (event) {
-      event.originalEvent.preventDefault(); // Prevent the default browser context menu
-      const element = event.element;
-
-      // Check if the right-clicked element is a BPMN Task
-      if (is(element, 'bpmn:Task')) {
-        console.log('Task element right-clicked:', element);
-        alert(`Right-clicked on Task: ${element.id}`);
-      } else {
-        console.log('Right-clicked on non-task element:', element);
-      }
-    });
+async function openDiagramBPMN(xml) {
+  try {
+    await bpmnModeler.importXML(xml);
+    console.log("BPMN loaded.");
   } catch (err) {
     console.error('Error loading BPMN diagram:', err);
   }
 }
 
-await openDiagram(diagramXML);
 
 // Function to convert BPMN to Petri Net
 async function convertBPMNToPetriNet(file) {
 
-  if (!modeler) {
+  if (!bpmnModeler) {
     alert("BPMN Modeler not initialized!");
     return;
   }
@@ -65,11 +89,32 @@ async function convertBPMNToPetriNet(file) {
     alert("Conversion failed. Check the console for details.");
   }
 }
+function rightClickOnBPMN() {
+  // Add event listener for right-click (context menu) on elements
+  bpmnModeler.on('element.contextmenu', function (event) {
+    event.originalEvent.preventDefault(); // Prevent the default browser context menu
+    const element = event.element;
+
+    // Check if the right-clicked element is a BPMN Task
+    if (is(element, 'bpmn:BusinessRuleTask')) {
+      const taskBusinessObject = element.businessObject;
+      taskBusinessObject.dmnDecisionRef = element.id;
+
+      // Pass dmnModeler as the first argument
+      openTableFromTaskID(dmnModeler, element.id);
+      activeTaskId = element.id;
+      console.log('Task element right-clicked:', element);
+      // alert(`Right-clicked on Task: ${element.id}`);
+    } else {
+      console.log('Right-clicked on non-task element:', element);
+    }
+  });
+}
 
 // Function to save the BPMN diagram as XML and trigger conversion
 async function exportAndConvert() {
   try {
-    const { xml } = await modeler.saveXML({ format: true });
+    const { xml } = await bpmnModeler.saveXML({ format: true });
 
     // Convert XML string to a file and send it to the backend
     const file = new File([xml], "diagram.bpmn", { type: "text/xml" });
@@ -81,5 +126,32 @@ async function exportAndConvert() {
   }
 }
 
-// Add event listener to the button
-document.getElementById("export-button").addEventListener("click", exportAndConvert);
+export async function goBackToBpmn() {
+  try {
+      // 1) Get the current definitions from the active DMN viewer
+      // const dmnViewer = dmnModeler.getActiveViewer();
+      // const definitions = dmnJS.getDefinitions();
+      const { xml: updatedDmnXml } = await dmnModeler.saveXML({ format: true });
+
+      // 2) Convert the updated definitions object to XML
+      // const moddle = dmnModeler.get('dmnModdle');
+      // const { xml: updatedDmnXml } = await moddle.toXML(definitions);
+
+      // 3) (Optional) Re-import to ensure the DMN modeler stays in sync, 
+      //    though if you immediately hide the DMN and don't plan to keep editing, 
+      //    you could skip the re-import:
+      await dmnModeler.importXML(updatedDmnXml);
+
+      // 4) Switch UI: hide DMN container, show BPMN container
+      document.getElementById('dmn-container').style.display = 'none';
+      document.getElementById('bpmn-container').style.display = 'block';
+
+      // 5) Clear any "active task" references if you have them
+      activeTaskId = null;
+  } catch (err) {
+      console.error('Error saving DMN:', err);
+      alert('Failed to save DMN. Check the console for details.');
+  }
+}
+
+init();
