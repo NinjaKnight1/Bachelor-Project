@@ -7,3 +7,4 @@ dist/
 npm-debug.log
 petri_nets/
 Test_Conversion/
+Backend/__pycache__/
