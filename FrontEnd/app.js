@@ -100,8 +100,13 @@ function rightClickOnBPMN() {
       const taskBusinessObject = element.businessObject;
       taskBusinessObject.dmnDecisionRef = element.id;
 
+      // Giv the name of the bpmn task so if the dmn decision table is not made yet, it will be created with the same name as the bpmn task
+      let dmnDicisionTableName = taskBusinessObject.name
+      // If the bpmn task has no name, the dmn decision table will be created with the name "Decision table"
+      dmnDicisionTableName ??= "Decision table";
+      
       // Pass dmnModeler as the first argument
-      openTableFromTaskID(dmnModeler, element.id);
+      openTableFromTaskID(dmnModeler, element.id, dmnDicisionTableName);
       activeTaskId = element.id;
       console.log('Task element right-clicked:', element);
       // alert(`Right-clicked on Task: ${element.id}`);

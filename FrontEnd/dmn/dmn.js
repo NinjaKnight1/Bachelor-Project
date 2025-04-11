@@ -59,7 +59,7 @@ export async function OLDopenTableFromTaskID(dmnModeler, decisionId) {
 }
 
 
-export async function openTableFromTaskID(dmnModeler, decisionId) {
+export async function openTableFromTaskID(dmnModeler, decisionId, dmnDicisionTableName) {
     const activeViewer = dmnModeler.getActiveViewer();
 
     if (!activeViewer) {
@@ -69,19 +69,22 @@ export async function openTableFromTaskID(dmnModeler, decisionId) {
     const existingView = findDecisionView(decisionId);
 
     if (!existingView) {
-        await createNewDecision(decisionId);
+        createNewDecision(decisionId, dmnDicisionTableName);
 
         let newView = findDecisionView(decisionId);
         if (newView) {
             console.log("New decision created:", newView);
+            // Open the new decision view, which is a decision table
             dmnModeler.open(newView);            
         } else {
             console.error("Failed to create new decision:", decisionId);
             return;
         }
     } else {
+        // Open the new decision view, which is a decision table
         dmnModeler.open(existingView);
     }
+    // Hiding the BPMN div and showing the DMN div
     document.getElementById('bpmn-container').style.display = 'none';
     document.getElementById('dmn-container').style.display = 'block';
 
@@ -97,13 +100,13 @@ function findDecisionView(decisionId) {
 }
 
 
-async function createNewDecision(decisionId) {
+async function createNewDecision(decisionId, dmnDicisionTableName) {
     let dmnModdle = dmnModeler._moddle;
     let definitions = dmnModeler.getDefinitions();
-    console.log("definition", definitions);
+
     const newDecision = dmnModdle.create('dmn:Decision', {
         id: decisionId,
-        name: `Decision`,
+        name: dmnDicisionTableName,
     });
     
     const newDecisionTable = await dmnModdle.create('dmn:DecisionTable', {
@@ -135,7 +138,7 @@ async function createNewDecision(decisionId) {
     inputClause.$parent = newDecisionTable; 
     outputClause.$parent = newDecisionTable;
     inputExpression.$parent = inputClause;
-    newDecision.$parent = definitions;
+    // newDecision.$parent = definitions;
     newDecision.decisionLogic = newDecisionTable;
 
     definitions.drgElement.push(newDecision);
