@@ -2,7 +2,7 @@ const CopyWebpackPlugin = require('copy-webpack-plugin');
 
 module.exports = {
   entry: {
-    bundle: ['./FrontEnd/app.js', './FrontEnd/style.css'] // Ensure style.css is included here
+    bundle: ['./FrontEnd/app.js', './FrontEnd/CSS/style.css'] // Ensure style.css is included here
   },
   output: {
     path: __dirname + '/public',

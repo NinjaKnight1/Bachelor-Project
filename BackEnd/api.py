@@ -23,33 +23,39 @@ PETRI_NETS_DIR = "petri_nets"
 os.makedirs(PETRI_NETS_DIR, exist_ok=True)
 
 @app.post("/convert/")
-async def convert_bpmn(file: UploadFile = File(...)):
+async def convert_bpmn(
+    bpmn: UploadFile = File(...),
+    dmn: UploadFile = File(None)  # Optional DMN file
+):
     try:
-        # Define the path where the file will be saved
-        file_path = os.path.join(PETRI_NETS_DIR, file.filename)
+        # Save BPMN
+        bpmn_path = os.path.join(PETRI_NETS_DIR, bpmn.filename)
+        with open(bpmn_path, "wb") as f:
+            f.write(await bpmn.read())
+        print(f"BPMN saved at: {bpmn_path}")
 
-        # Save the uploaded BPMN file
-        content = await file.read()
-        with open(file_path, "wb") as f:
-            f.write(content)
-
-        print(f"File saved at: {file_path}")
+        # Save DMN (if provided)
+        if dmn:
+            dmn_path = os.path.join(PETRI_NETS_DIR, dmn.filename)
+            with open(dmn_path, "wb") as f:
+                f.write(await dmn.read())
+            print(f"DMN saved at: {dmn_path}")
 
         # Read BPMN model from saved file
-        bpmn_model = pm4py.read_bpmn(file_path)
+        bpmn_model = pm4py.read_bpmn(bpmn_path)
 
         # Convert BPMN to Petri Net
         petri_net, im, fm = pm4py.convert_to_petri_net(bpmn_model)
 
         # Export the Petri net to PNML using the exporter
-        pm4py.write_pnml(petri_net, im, fm, file_path.replace(".bpmn", ".pnml"))
+        pm4py.write_pnml(petri_net, im, fm, bpmn_path.replace(".bpmn", ".pnml"))
 
         # Read the PNML file
-        pnml_file_path = file_path.replace(".bpmn", ".pnml")
+        pnml_file_path = bpmn_path.replace(".bpmn", ".pnml")
 
 
         # Determine the execution order of the PNML file
-        businessT_list = business_task_list(file_path)
+        businessT_list = business_task_list(bpmn_path)
         print("BusinessTask List:", businessT_list)
    
         for activity in businessT_list:
@@ -70,7 +76,7 @@ async def convert_bpmn(file: UploadFile = File(...)):
         diagram_path = pnml_file_path.replace(".pnml", ".png")
         pn_vis_factory.save(gviz, diagram_path)
 
-        return {"message": "Conversion successful!", "file_path": file_path}
+        return {"message": "Conversion successful!", "file_path": bpmn_path}
 
     except Exception as e:
         return {"error": str(e)}

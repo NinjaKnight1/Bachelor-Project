@@ -6,22 +6,4 @@
              id="definitions"
              name="definitions"
              namespace="http://camunda.org/schema/1.0/dmn">
-  <decision id="decision" name="Decision">
-    <decisionTable id="decisionTable">
-      <input id="input1">
-        <inputExpression id="inputExpression1" typeRef="string">
-          <text>Input</text>
-        </inputExpression>
-      </input>
-      <output id="output1" name="Output" typeRef="string" />
-      <rule id="rule1">
-        <inputEntry id="inputEntry1">
-          <text>"A"</text>
-        </inputEntry>
-        <outputEntry id="outputEntry1">
-          <text>"Result A"</text>
-        </outputEntry>
-      </rule>
-    </decisionTable>
-  </decision>
 </definitions>

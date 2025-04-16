@@ -1,12 +1,5 @@
 import xml.etree.ElementTree as ET
 import copy
-import pm4py
-from pm4py.visualization.petri_net import visualizer as pn_vis_factory
-
-import xml.etree.ElementTree as ET
-import copy
-import pm4py
-from pm4py.visualization.petri_net import visualizer as pn_vis_factory
 
 def split_pnml_element(
     pnml_path: str,

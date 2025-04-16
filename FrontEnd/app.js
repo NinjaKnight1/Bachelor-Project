@@ -119,17 +119,38 @@ function rightClickOnBPMN() {
 // Function to save the BPMN diagram as XML and trigger conversion
 async function exportAndConvert() {
   try {
-    const { xml } = await bpmnModeler.saveXML({ format: true });
+    // Export BPMN XML
+    const { xml: bpmnXml } = await bpmnModeler.saveXML({ format: true });
+    const bpmnFile = new File([bpmnXml], "diagram.bpmn", { type: "text/xml" });
 
-    // Convert XML string to a file and send it to the backend
-    const file = new File([xml], "diagram.bpmn", { type: "text/xml" });
-    await convertBPMNToPetriNet(file);
+    // Export DMN XML
+    const { xml: dmnXml } = await dmnModeler.saveXML({ format: true });
+    const dmnFile = new File([dmnXml], "decision-table.dmn", { type: "text/xml" });
 
+    // Send both files to backend
+    const formData = new FormData();
+    formData.append("bpmn", bpmnFile);
+    formData.append("dmn", dmnFile);
+
+    const response = await fetch("http://localhost:8080/convert/", {
+      method: "POST",
+      body: formData,
+      headers: { Accept: "application/json" }
+    });
+
+    if (!response.ok) {
+      throw new Error("Failed to convert BPMN and DMN");
+    }
+
+    const data = await response.json();
+    console.log("Conversion successful:", data);
+    alert("BPMN and DMN successfully converted and saved!");
   } catch (error) {
-    console.error("Error exporting BPMN:", error);
-    alert("Failed to export BPMN. Check the console for details.");
+    console.error("Error exporting BPMN/DMN:", error);
+    alert("Export or conversion failed. Check the console for details.");
   }
 }
+
 
 export async function goBackToBpmn() {
   try {
