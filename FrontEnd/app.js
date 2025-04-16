@@ -12,6 +12,8 @@ import { is } from 'bpmn-js/lib/util/ModelUtil'; // Utility to check element typ
 // BPMN and DMN diagram XML files
 import bpmnDiagramXML from '../resources/defaultBpmnDiagram.bpmn';
 import dmnDiagramXML from '../resources/defaultDmnDiagram.dmn';
+import './style.css';
+import CustomPaletteProvider from './bpmn/customPaletteProvider.js';
 
 // At the top level, create a moddle instance (once).
 export const dmnModdle = new DmnModdle();
@@ -25,9 +27,20 @@ async function init() {
 
   bpmnModeler = new BpmnModeler({
     container: '#bpmn-canvas',
+    additionalModules: [
+      CustomPaletteProvider
+    ],
   });
+
   dmnModeler = new DmnModeler({
     container: '#dmn-canvas',
+    decisionTable: {
+      additionalModules: [
+        {
+          viewDrd: ['value', null]
+        }
+      ]
+    },
   });
 
   await openDiagramBPMN(bpmnDiagramXML);
