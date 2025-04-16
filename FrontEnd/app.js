@@ -14,7 +14,6 @@ import bpmnDiagramXML from '../resources/defaultBpmnDiagram.bpmn';
 import dmnDiagramXML from '../resources/defaultDmnDiagram.dmn';
 import './style.css';
 import CustomPaletteProvider from './bpmn/customPaletteProvider.js';
-import configBpmnModeler from './bpmn/bpmnModelerConfig.js';
 
 // At the top level, create a moddle instance (once).
 export const dmnModdle = new DmnModdle();
