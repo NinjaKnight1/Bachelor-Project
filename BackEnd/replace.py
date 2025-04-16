@@ -30,7 +30,17 @@ def split_pnml_element(
     for i, new_id in enumerate(list_new_ids):
         new = copy.deepcopy(target)
         new.set('id', new_id)
+
+        # set new name 'oldname_1', 'oldname_2', etc.
+        name = new.find('name')
+        if name is not None:
+            text = name.find('text')
+            if text is not None:
+                current_name = text.text
+                text.text = f"{current_name}_{i+1}"
+        
         page.append(new)
+
 
     # Update arcs
     arcs = page.findall('arc')
