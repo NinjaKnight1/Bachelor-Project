@@ -13,5 +13,7 @@ def business_task_list(bpmn_file_path: str):
     # Extract the IDs of the business rule tasks
     task_ids = [task.get("id") for task in business_rule_tasks]
 
+    
+
     return task_ids
 

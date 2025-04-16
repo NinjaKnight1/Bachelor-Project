@@ -12,7 +12,7 @@ import { is } from 'bpmn-js/lib/util/ModelUtil'; // Utility to check element typ
 // BPMN and DMN diagram XML files
 import bpmnDiagramXML from '../resources/defaultBpmnDiagram.bpmn';
 import dmnDiagramXML from '../resources/defaultDmnDiagram.dmn';
-import './style.css';
+import './CSS/style.css';
 import CustomPaletteProvider from './bpmn/customPaletteProvider.js';
 
 // At the top level, create a moddle instance (once).
