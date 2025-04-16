@@ -100,7 +100,7 @@ function findDecisionView(decisionId) {
 }
 
 
-async function createNewDecision(decisionId, dmnDicisionTableName) {
+function createNewDecision(decisionId, dmnDicisionTableName) {
     let dmnModdle = dmnModeler._moddle;
     let definitions = dmnModeler.getDefinitions();
 
@@ -109,7 +109,7 @@ async function createNewDecision(decisionId, dmnDicisionTableName) {
         name: dmnDicisionTableName,
     });
     
-    const newDecisionTable = await dmnModdle.create('dmn:DecisionTable', {
+    const newDecisionTable = dmnModdle.create('dmn:DecisionTable', {
         id: `${decisionId}_decisionTable`,
         hitPolicy: 'UNIQUE'
     });
@@ -138,10 +138,11 @@ async function createNewDecision(decisionId, dmnDicisionTableName) {
     inputClause.$parent = newDecisionTable; 
     outputClause.$parent = newDecisionTable;
     inputExpression.$parent = inputClause;
-    // newDecision.$parent = definitions;
+    newDecision.$parent = definitions;
     newDecision.decisionLogic = newDecisionTable;
 
     definitions.drgElement.push(newDecision);
 
     dmnModeler._setDefinitions(definitions);
+    
 }

@@ -15,3 +15,11 @@
 #export-button:hover {
   background-color: darkred;
 }
+
+/* .dmn-decision-table-container .view-drd-button {
+  display: none !important;
+}
+
+[data-action="showDrd"] {
+  display: none !important;
+} */
