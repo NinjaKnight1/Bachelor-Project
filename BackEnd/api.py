@@ -5,7 +5,7 @@ import pm4py
 from pm4py.visualization.petri_net import visualizer as pn_vis_factory
 
 from replace import split_pnml_element
-from checkOrder import determine_execution_order
+from sortBusinessTask import business_task_list
 
 app = FastAPI()
 
@@ -49,13 +49,10 @@ async def convert_bpmn(file: UploadFile = File(...)):
 
 
         # Determine the execution order of the PNML file
-        order_list = determine_execution_order(file_path.replace(".bpmn", ".pnml"))
-        print("Execution order:", order_list)
-
-        #Order_lkist to only include elements that starts with "Activity_"
-        final_list = [item for item in order_list if item.startswith("Activity_")]
+        businessT_list = business_task_list(file_path)
+        print("BusinessTask List:", businessT_list)
    
-        for activity in final_list:
+        for activity in businessT_list:
             split_pnml_element(
                 pnml_path=pnml_file_path,  # Path to the PNML file
                 element_id=activity,  # The ID of the transition to split
