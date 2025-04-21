@@ -13,7 +13,7 @@ def business_task_list(bpmn_file_path: str, dmn_file_path: str) -> list:
     # Find all <bpmn2:businessRuleTask> elements
     business_rule_tasks = root.findall(".//bpmn2:businessRuleTask", bpmnNS)
 
-    result = []
+    task_list = []
 
     for task in business_rule_tasks:
         task_id = task.get("id")
@@ -22,17 +22,22 @@ def business_task_list(bpmn_file_path: str, dmn_file_path: str) -> list:
         decision = dmn_root.find(f".//dmn:decision[@id='{task_id}']", dmnNS)
 
         if decision is not None:
-            #get number of rules for each task 
-            rules = decision.findall(".//dmn:rule", dmnNS)
-            num = len(rules)
+            rule_text = []
 
-            print(f"Task ID: {task_id}, Number of rules: {num}")
+            #get if for input entries
+            rules = decision.findall(".//dmn:inputEntry", dmnNS)
+
+            #list of rules for input entries
+            for rule in rules:
+                text = rule.find(".//dmn:text", dmnNS)
+                if text is not None:
+                    rule_text.append(text.text)
 
         else:
-            num = 0
             print("No decision found for task ID:", task_id)
 
-        result.append((task_id, num))
+        task_list.append((task_id, rule_text))
+        print(f"Task ID: {task_id}, Rules: {rule_text}")
 
-    return result
+    return task_list
 

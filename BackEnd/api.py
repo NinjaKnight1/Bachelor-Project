@@ -59,14 +59,15 @@ async def convert_bpmn(
         print("BusinessTask List and Number:", businessT_list)
    
         for activity in businessT_list:
-            # Activity is a tuple (task_id, num_rules)
-            task_id, num_rules = activity
-            print(f"Splitting element with ID: {task_id} into {num_rules} elements.")
+            # Activity is a tuple (task_id, num, rules)
+            task_id, rules = activity
+
+            print(f"Splitting element with ID: {task_id} into {len(rules)} elements.")
 
             split_pnml_element(
-                pnml_path=pnml_file_path,  # Path to the PNML file
-                element_id=task_id,  # The ID of the transition to split
-                new_element=num_rules,  # Number of duplicates to create
+                pnml_path=pnml_file_path,    # Path to the PNML file
+                element_id=task_id,          # The ID of the transition to split
+                rules=rules,                 # Rules for the task
                 output_path=pnml_file_path   # Output file path
             )
             print(f"Element {activity} split into 2 new elements.")

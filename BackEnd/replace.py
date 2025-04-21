@@ -4,7 +4,7 @@ import copy
 def split_pnml_element(
     pnml_path: str,
     element_id: str,
-    new_element: int,
+    rules: list,
     output_path: str
 ):
     tree = ET.parse(pnml_path)
@@ -22,7 +22,7 @@ def split_pnml_element(
 
     # Create new IDs
     list_new_ids = []
-    for i in range(new_element):
+    for i in range(len(rules)):
         new_id = f"{element_id}_{i+1}"
         list_new_ids.append(new_id)
     
@@ -41,7 +41,6 @@ def split_pnml_element(
         
         page.append(new)
 
-
     # Update arcs
     arcs = page.findall('arc')
     for arc in list(arcs):
@@ -52,24 +51,26 @@ def split_pnml_element(
 
             # Create new arcs for each new ID
             for i, new_id in enumerate(list_new_ids):
-                arc1 = copy.deepcopy(arc)
-                arc1.set('source', new_id)
-                arc1.set('id', arc.get('id') + f'_{i+1}')
-                _set_arc_label_plain(arc1, f"Label to {i+1}")
+                arc_src = copy.deepcopy(arc)
+                arc_src.set('source', new_id)
+                arc_src.set('id', arc.get('id') + f'_{i+1}')
+                _set_arc_label_plain(arc_src, f"Label to {i+1}")
 
-                page.append(arc1)
+                page.append(arc_src)
             page.remove(arc)
 
         elif tgt == element_id:
             # Create new arcs for each new ID
             for i, new_id in enumerate(list_new_ids):
-                arc1 = copy.deepcopy(arc)
-                arc1.set('target', new_id)
-                arc1.set('id', arc.get('id') + f'_{i+1}')
-                _set_arc_label_plain(arc1, f"Label to {i+1}")
+                arc_tgt = copy.deepcopy(arc)
+                arc_tgt.set('target', new_id)
+                arc_tgt.set('id', arc.get('id') + f'_{i+1}')
+                _set_arc_label_plain(arc_tgt, f"input rule: {rules[i]}")
+                
 
-                page.append(arc1)
+                page.append(arc_tgt)
             page.remove(arc)
+
     page.remove(target)
     tree.write(output_path, encoding='utf-8', xml_declaration=True)
 
