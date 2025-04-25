@@ -2,7 +2,7 @@ import 'bpmn-js/dist/assets/diagram-js.css';
 import 'bpmn-js/dist/assets/bpmn-js.css';
 import 'bpmn-js/dist/assets/bpmn-font/css/bpmn-embedded.css';
 
-import { openTableFromTaskID } from'./dmn/dmn.js';
+import { openTableFromTaskID } from './dmn/dmn.js';
 
 import BpmnModeler from 'bpmn-js/lib/Modeler';
 import DmnModeler from 'dmn-js/lib/Modeler';
@@ -14,6 +14,8 @@ import bpmnDiagramXML from '../resources/defaultBpmnDiagram.bpmn';
 import dmnDiagramXML from '../resources/defaultDmnDiagram.dmn';
 import './CSS/style.css';
 import CustomPaletteProvider from './bpmn/customPaletteProvider.js';
+import configBpmnModeler from './bpmn/bpmnModelerConfig.js';
+import { feelToAst } from './translationOfFeel.ts';
 
 // At the top level, create a moddle instance (once).
 export const dmnModdle = new DmnModdle();
@@ -43,6 +45,8 @@ async function init() {
     },
   });
 
+  configBpmnModeler(bpmnModeler);
+
   await openDiagramBPMN(bpmnDiagramXML);
   await openDiagramDMN(dmnDiagramXML);
 
@@ -50,7 +54,8 @@ async function init() {
 
   // Add event listener to the button
   document.getElementById("export-button").addEventListener("click", exportAndConvert);
-  document.getElementById("dmn-back-button").addEventListener("click", () => goBackToBpmn(dmnModeler));}
+  document.getElementById("dmn-back-button").addEventListener("click", () => goBackToBpmn(dmnModeler));
+}
 
 async function openDiagramDMN(xml) {
   try {
@@ -117,7 +122,7 @@ function rightClickOnBPMN() {
       let dmnDicisionTableName = taskBusinessObject.name
       // If the bpmn task has no name, the dmn decision table will be created with the name "Decision table"
       dmnDicisionTableName ??= "Decision table";
-      
+
       // Pass dmnModeler as the first argument
       openTableFromTaskID(dmnModeler, element.id, dmnDicisionTableName);
       activeTaskId = element.id;
@@ -139,6 +144,8 @@ async function exportAndConvert() {
     // Export DMN XML
     const { xml: dmnXml } = await dmnModeler.saveXML({ format: true });
     const dmnFile = new File([dmnXml], "decision-table.dmn", { type: "text/xml" });
+
+    feelToAst(dmnModeler);
 
     // Send both files to backend
     const formData = new FormData();
@@ -167,29 +174,29 @@ async function exportAndConvert() {
 
 export async function goBackToBpmn() {
   try {
-      // 1) Get the current definitions from the active DMN viewer
-      // const dmnViewer = dmnModeler.getActiveViewer();
-      // const definitions = dmnJS.getDefinitions();
-      const { xml: updatedDmnXml } = await dmnModeler.saveXML({ format: true });
+    // 1) Get the current definitions from the active DMN viewer
+    // const dmnViewer = dmnModeler.getActiveViewer();
+    // const definitions = dmnJS.getDefinitions();
+    const { xml: updatedDmnXml } = await dmnModeler.saveXML({ format: true });
 
-      // 2) Convert the updated definitions object to XML
-      // const moddle = dmnModeler.get('dmnModdle');
-      // const { xml: updatedDmnXml } = await moddle.toXML(definitions);
+    // 2) Convert the updated definitions object to XML
+    // const moddle = dmnModeler.get('dmnModdle');
+    // const { xml: updatedDmnXml } = await moddle.toXML(definitions);
 
-      // 3) (Optional) Re-import to ensure the DMN modeler stays in sync, 
-      //    though if you immediately hide the DMN and don't plan to keep editing, 
-      //    you could skip the re-import:
-      await dmnModeler.importXML(updatedDmnXml);
+    // 3) (Optional) Re-import to ensure the DMN modeler stays in sync, 
+    //    though if you immediately hide the DMN and don't plan to keep editing, 
+    //    you could skip the re-import:
+    await dmnModeler.importXML(updatedDmnXml);
 
-      // 4) Switch UI: hide DMN container, show BPMN container
-      document.getElementById('dmn-container').style.display = 'none';
-      document.getElementById('bpmn-container').style.display = 'block';
+    // 4) Switch UI: hide DMN container, show BPMN container
+    document.getElementById('dmn-container').style.display = 'none';
+    document.getElementById('bpmn-container').style.display = 'block';
 
-      // 5) Clear any "active task" references if you have them
-      activeTaskId = null;
+    // 5) Clear any "active task" references if you have them
+    activeTaskId = null;
   } catch (err) {
-      console.error('Error saving DMN:', err);
-      alert('Failed to save DMN. Check the console for details.');
+    console.error('Error saving DMN:', err);
+    alert('Failed to save DMN. Check the console for details.');
   }
 }
 
