@@ -11,11 +11,10 @@ import { is } from 'bpmn-js/lib/util/ModelUtil'; // Utility to check element typ
 
 // BPMN and DMN diagram XML files
 import bpmnDiagramXML from '../resources/defaultBpmnDiagram.bpmn';
-import dmnDiagramXML from '../resources/defaultDmnDiagram.dmn';
+import dmnDiagramXML from '../Diagrams/FeelTranslation/DishDiagramMultibleOutputs.dmn';
 import './CSS/style.css';
 import CustomPaletteProvider from './bpmn/customPaletteProvider.js';
-import configBpmnModeler from './bpmn/bpmnModelerConfig.js';
-import { feelToAst } from './translationOfFeel.ts';
+import { feelToSmtLib } from './translationOfFeel.ts';
 
 // At the top level, create a moddle instance (once).
 export const dmnModdle = new DmnModdle();
@@ -45,7 +44,6 @@ async function init() {
     },
   });
 
-  configBpmnModeler(bpmnModeler);
 
   await openDiagramBPMN(bpmnDiagramXML);
   await openDiagramDMN(dmnDiagramXML);
@@ -145,7 +143,7 @@ async function exportAndConvert() {
     const { xml: dmnXml } = await dmnModeler.saveXML({ format: true });
     const dmnFile = new File([dmnXml], "decision-table.dmn", { type: "text/xml" });
 
-    feelToAst(dmnModeler);
+    feelToSmtLib(dmnModeler);
 
     // Send both files to backend
     const formData = new FormData();
