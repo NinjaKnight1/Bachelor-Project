@@ -44,7 +44,6 @@ async function init() {
     },
   });
 
-
   await openDiagramBPMN(bpmnDiagramXML);
   await openDiagramDMN(dmnDiagramXML);
 

@@ -1,4 +1,4 @@
-import { parseUnaryTests, unaryTest } from 'feelin';
+import { parseUnaryTests,parseExpression, unaryTest } from 'feelin';
 import { Tree, TreeCursor } from '@lezer/common';
 const DecisionTableType = 'decisionTable';
 
@@ -91,11 +91,10 @@ export function guardsFromDmnmodeler(dmnModeler: any) {
 
 function translateFeelToSmtLib(expression: string): string {
   // Parse the expression using the feel parser
-  const treeCursor = parseUnaryTests(expression).cursor();
-
+  const tree = parseExpression(expression);
+  console.log('tree', tree);
+  console.log('tree.toString()', tree.toString());
   
-
-
   return '';
 }
 
