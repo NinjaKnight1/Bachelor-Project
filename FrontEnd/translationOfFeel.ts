@@ -1,6 +1,8 @@
-import { parseUnaryTests,parseExpression, unaryTest } from 'feelin';
+import { parseUnaryTests, parseExpression, unaryTest } from 'feelin';
 import { Tree, TreeCursor } from '@lezer/common';
 const DecisionTableType = 'decisionTable';
+
+enum ParseType { Unary, Expression };
 
 type VariableTypes = string | number | boolean;
 
@@ -12,7 +14,7 @@ type DecisionTable = {
 type Expression = {
   variableType: VariableTypes;
   text: string;
-  translatedText: string|null;
+  translatedText: string | null;
   rules: Array<Rows>;
 }
 
@@ -60,13 +62,12 @@ export function guardsFromDmnmodeler(dmnModeler: any) {
           const text = inputExpression.text;
 
           // translating the text from feel to smtlib
-          const translatedText = translateFeelToSmtLib(text);
-
+          const translatedText = translateFeelToSmtLib(text, ParseType.Expression);
 
           let expression: Expression = {
             variableType: variableType,
             text: text,
-            translatedText: null,
+            translatedText: translatedText,
             rules: []
           };
 
@@ -89,12 +90,64 @@ export function guardsFromDmnmodeler(dmnModeler: any) {
 }
 
 
-function translateFeelToSmtLib(expression: string): string {
+function translateFeelToSmtLib(expression: string, parseType: ParseType): string {
   // Parse the expression using the feel parser
-  const tree = parseExpression(expression);
-  console.log('tree', tree);
-  console.log('tree.toString()', tree.toString());
-  
-  return '';
+  let tree: Tree;
+  switch (parseType) {
+    case ParseType.Unary:
+      tree = parseUnaryTests(expression);
+      break;
+    case ParseType.Expression:
+      tree = parseExpression(expression);
+      break;
+  }
+  const smtLib = walkTree(tree.cursor(), expression);
+  console.log('expression', expression);
+  console.log('tree', tree.toString());
+  console.log('smtLib', smtLib);
+  return smtLib;
 }
 
+function walkTree(cursor: TreeCursor, expression: string): string {
+  switch (cursor.node.type.name) {
+    case 'Expression': // start of the expression
+      cursor.firstChild();
+      let result = walkTree(cursor, expression);
+      cursor.parent();
+      return result;
+    case 'NumericLiteral': // write the number
+      return expression.substring(cursor.from, cursor.to);
+    case 'ArithmeticExpression':
+      cursor.firstChild();
+      let left = walkTree(cursor, expression);
+      cursor.nextSibling();
+      let operator = expression.substring(cursor.from, cursor.to);
+      cursor.nextSibling();
+      let right = walkTree(cursor, expression);
+      cursor.parent();
+      return "("+ operator + " " + left + " " + right + ")";
+    case 'ParenthesizedExpression':
+      cursor.firstChild();
+      cursor.nextSibling();
+      let inner = walkTree(cursor, expression);
+      cursor.parent();
+      return inner;
+    case 'StringLiteral':
+      return expression.substring(cursor.from, cursor.to);
+    case 'VariableName':
+      return expression.substring(cursor.from, cursor.to);
+    case 'FunctionInvocation':
+      cursor.firstChild();
+      let functionName = expression.substring(cursor.from, cursor.to);
+      cursor.nextSibling();
+      let arg = walkTree(cursor, expression);
+      cursor.parent();
+      return "(" + functionName + " " + arg + ")";
+
+
+    default:
+      return '';
+  }
+}
+
+export { translateFeelToSmtLib, ParseType };
