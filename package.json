@@ -8,6 +8,8 @@
     "dev": "webpack-dev-server --static=public --open",
     "start": "run-s dev",
     "test": "jest",
+    "test:print": "jest --verbose=false", 
+    "test:debug": "jest --runInBand",
     "test:watch": "jest --watch"
   },
   "keywords": [

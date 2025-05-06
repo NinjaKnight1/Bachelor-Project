@@ -1,0 +1,50 @@
+{
+  "meta": {
+    "translation": "smt-lib"
+  },
+  "bpmn": {
+    "gateDecisions": [
+      {
+        "Id": "Gateway_Approve_1",
+        "expression": "(= approved true)"
+      },
+      {
+        "Id": "Gateway_Approve_2",
+        "expression": "(= approved false)"
+      }
+    ]
+  },
+  "dmn": {
+    "decisionTables": [
+      {
+        "tableId": "Decision_ApproveLoan",
+        "hitPolicy": "unique",
+        "inputs": [
+          {
+            "expression": "risk"
+          },
+          {
+            "expression": "amount"
+          }
+        ],
+        "outputs": [
+          {
+            "expression": "approved"
+          }
+        ],
+        "rules": [
+          {
+            "row": 1,
+            "pre": "(and (= risk \"low\") (< amount 1000))",
+            "post": "(= approved true)"
+          },
+          {
+            "row": 2,
+            "pre": "(and (not (and (= risk \"low\") (< amount 1000))) (= risk \"high\"))",
+            "post": "(= approved false)"
+          }
+        ]
+      }
+    ]
+  }
+}
