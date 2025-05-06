@@ -88,3 +88,23 @@ describe('translationOfFeel – variable expressions', () => {
 
 
 });
+
+//boolean expressions
+describe('translationOfFeel – boolean expressions', () => {
+  
+  it('handles a boolean', () => {
+    const smt = translateFeelToSmtLib('true', ParseType.Expression);
+    expect(smt).toBe(
+      'true'
+    );
+  });
+
+  it('handles a boolean', () => {
+    const smt = translateFeelToSmtLib('false', ParseType.Expression);
+    expect(smt).toBe(
+      'false'
+    );
+  });
+
+}
+);
