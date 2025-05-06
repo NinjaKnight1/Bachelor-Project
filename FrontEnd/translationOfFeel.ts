@@ -132,8 +132,6 @@ function walkTree(cursor: TreeCursor, expression: string): string {
       let inner = walkTree(cursor, expression);
       cursor.parent();
       return inner;
-    case 'StringLiteral':
-      return expression.substring(cursor.from, cursor.to);
     case 'VariableName':
       return expression.substring(cursor.from, cursor.to);
     case 'FunctionInvocation':
@@ -144,6 +142,13 @@ function walkTree(cursor: TreeCursor, expression: string): string {
       cursor.parent();
       return "(" + functionName + " " + arg + ")";
 
+    //String
+    case 'StringLiteral':
+      return expression.substring(cursor.from, cursor.to);
+
+    //Boolean
+    case 'BooleanLiteral':
+      return expression.substring(cursor.from, cursor.to);
 
     default:
       return '';
