@@ -1,85 +1,183 @@
 import { parseUnaryTests, parseExpression, unaryTest } from 'feelin';
 import { Tree, TreeCursor } from '@lezer/common';
+import { ModdleElement } from 'bpmn-js/lib/model/Types';
 const DecisionTableType = 'decisionTable';
+const Error = '⚠';
 
 enum ParseType { Unary, Expression };
+
+enum hitPolicyType {
+  Unique = 'UNIQUE',
+  First = 'FIRST'
+}
 
 type VariableTypes = string | number | boolean;
 
 type DecisionTable = {
-  input: Array<Expression>;
-  output: Array<Expression>;
+  tableId: string;
+  hitPolicy: string;
+  inputs: Array<Expression>;
+  outputs: Array<Expression>;
+  rules: Array<Rule>;
 }
 
 type Expression = {
-  variableType: VariableTypes;
-  text: string;
-  translatedText: string | null;
-  rules: Array<Rows>;
+  expression: string;
 }
 
-type Rows = {
-  variableType: Array<VariableTypes>;
-  text: string;
-  translatedText: string;
+type Rule = {
+  row: number;
+  pre: string;
+  post: string;
+}
+
+type DiagramDecision = {
+  bpmn: Array<string>;
+  dmn: Array<DecisionTable>;
+}
+
+type PayloadGateDecision = { id: string; expression: string };
+type PayloadRule = { row: number; pre: string; post: string };
+type PayloadDecisionTable = { tableId: string; hitPolicy: string; inputs: string[]; outputs: string[]; rules: PayloadRule[] };
+type TransferPayload = { meta: { translation: "smt-lib" }; bpmn: { gateDecisions: PayloadGateDecision[] }; dmn: { decisionTables: DecisionTable[] } };
+
+
+export function jsonFromBpmnAndDmn(bpmnModeler: any, dmnModeler: any): File {
+
+  let diagramDecision: DiagramDecision = parseDecisionFromfeelToSmtLib(bpmnModeler, dmnModeler);
+
+  let diagramDecisionJson = JSON.stringify(diagramDecision);
+  const jsonOutputFile = new File([diagramDecisionJson], "decision-table.dmn", { type: "text/json" });
+
+  return jsonOutputFile;
 }
 
 
-export function feelToSmtLib(dmnModeler: any) {
-  guardsFromDmnmodeler(dmnModeler);
-  // const viewer = dmnModeler.getActiveViewer();
-  // console.log('view', viewer);
-  // const decision = viewer._decision;
-  // const decisionTable = decision.decisionLogic.rule;
-  // console.log('decisionTable', decisionTable);
-  // for (const r of decisionTable) {
-  //   const cellTxt = r.inputEntry[0].text;
-  //   const unaryAst   = parseUnaryTests(cellTxt);
-  //   console.log('unaryAst', unaryAst.toString());
+export function parseDecisionFromfeelToSmtLib(bpmnModeler: any, dmnModeler: any): DiagramDecision {
+  // let payload = {} as TransferPayload;
+  // payload.meta = { translation: "smt-lib" };
+
+  let decisionTables = guardsFromDmnmodeler(dmnModeler);
+  // decision table
+  // for (const decisionTable of decisionTables) {
+  //   let rowNumber = 0;
+  //   // extracs all the input and output expressions from the decision table
+  //   for (const input of decisionTable.input) {
+
+  let jsonOutput: DiagramDecision = {
+    bpmn: [],
+    dmn: decisionTables
+  }
+  //   }
+
   // }
-  // const src = "if amount > 100 then \"VIP\" else \"STD\"";
-  // const unaryAst = parseUnaryTests(src).cursor();
-  // console.log(unaryAst.toString()); 
-  // console.log(unaryAst.node.type.name); // "IfElse"
+  // const json = JSON.stringify(payload, null, 2);
+  return jsonOutput;
 }
-export function guardsFromDmnmodeler(dmnModeler: any) {
+
+
+
+function guardsFromDmnmodeler(dmnModeler: any): Array<DecisionTable> {
   const viewList: Array<any> = dmnModeler.getViews();
 
-  var decisionTables = new Array<DecisionTable>();
+  var decisionTableList = new Array<DecisionTable>();
 
+  // Going through all the list in the decision table
   viewList.forEach(view => {
     switch (view.type) {
       case DecisionTableType:
-        var decisionTable: DecisionTable = {
-          input: [],
-          output: []
-        };
-        // this is the decision table header
         const decisionLogicInfo = view.element.decisionLogic;
+        const decisionTableId = view.element.id;
+        const hitPolicy = decisionLogicInfo.hitPolicy;
+
+        // The rules for this decision table
+        let ruleList: Array<Rule> = [];
+
+        // this is the decision table header
+        let inputHeader: Array<Expression> = [];
+        let outputHeader: Array<Expression> = [];
+
         decisionLogicInfo.input.forEach((input: any) => {
           const inputExpression = input.inputExpression;
-          const variableType = inputExpression.typeRef;
-          const text = inputExpression.text;
-
+          const inputText = inputExpression.text;
           // translating the text from feel to smtlib
-          const translatedText = translateFeelToSmtLib(text, ParseType.Expression);
+          const translatedText = translateFeelToSmtLib(inputText, ParseType.Expression);
+          inputHeader.push({ expression: translatedText });
+        });
+        decisionLogicInfo.output.forEach((output: any) => {
+          const outputName = output.name;
 
-          let expression: Expression = {
-            variableType: variableType,
-            text: text,
-            translatedText: translatedText,
-            rules: []
-          };
+          const translatedText = translateFeelToSmtLib(outputName, ParseType.Expression);
+          outputHeader.push({ expression: translatedText });
 
         });
-        const inputExpressionType = decisionLogicInfo;
-        // extracting the input header
-        console.log('DecisionTableHeader', decisionLogicInfo);
+
+        // rules combined for each row
+        const rules: Array<any> = decisionLogicInfo.rule;
 
 
-        // this is the decision table rules
-        const decisiontableRules = decisionLogicInfo.rule;
-        console.log('DecisionTable', decisiontableRules);
+        let allInputRows = []
+        for (let rowNumber = 0; rowNumber < rules.length; rowNumber++) {
+          let rulesRow = rules.at(rowNumber);
+          let inputRow = [];
+          let outputRow = [];
+
+
+          const inputEntry = rulesRow.inputEntry;
+          const outputEntry = rulesRow.outputEntry;
+
+          for (let inputColumn = 0; inputColumn < inputEntry.length; inputColumn++) {
+            const inputText = inputEntry.at(inputColumn).text;
+
+            const translatedText = translateFeelToSmtLib(inputText, ParseType.Unary, inputHeader.at(inputColumn)?.expression);
+            inputRow.push(translatedText);
+          }
+
+          let inputRowRule = listWithExpression(inputRow, 'and');
+          allInputRows.push(inputRowRule);
+
+          let preCondition: string = '';
+          let postCondition: string = '';
+
+
+          switch (hitPolicy) {
+            case hitPolicyType.Unique:
+              preCondition = inputRowRule;
+
+              break;
+            case hitPolicyType.First:
+              preCondition = inputRowRule;
+              break;
+            default:
+              return
+          }
+
+          for (let outputColumn = 0; outputColumn < outputEntry.length; outputColumn++) {
+            const outputText = outputEntry.at(outputColumn).text;
+
+            const translatedText = translateFeelToSmtLib(outputText, ParseType.Unary, outputHeader.at(outputColumn)?.expression);
+            outputRow.push(translatedText);
+          }
+
+          postCondition = listWithExpression(outputRow, 'and');
+
+
+          let rule: Rule = {
+            row: rowNumber,
+            pre: preCondition,
+            post: postCondition,
+          }
+          ruleList.push(rule);
+        }
+
+        let decisionTable: DecisionTable = {
+          tableId: decisionTableId,
+          hitPolicy: hitPolicy,
+          inputs: inputHeader,
+          outputs: outputHeader,
+          rules: ruleList,
+        }
+        decisionTableList.push(decisionTable);
         break;
       default:
         break;
@@ -87,24 +185,28 @@ export function guardsFromDmnmodeler(dmnModeler: any) {
     }
   });
 
+  return decisionTableList;
+
 }
 
 
-function translateFeelToSmtLib(expression: string, parseType: ParseType): string {
+function translateFeelToSmtLib(expression: string, parseType: ParseType, headerExpression: string = ''): string {
   // Parse the expression using the feel parser
+  if (expression == '' || expression == null) {
+    return '';
+  }
   let tree: Tree;
+  let smtLib: string;
   switch (parseType) {
     case ParseType.Unary:
       tree = parseUnaryTests(expression);
+      smtLib = walkTreeUnary(tree.cursor(), expression, headerExpression);
       break;
     case ParseType.Expression:
       tree = parseExpression(expression);
+      smtLib = walkTree(tree.cursor(), expression);
       break;
   }
-  const smtLib = walkTree(tree.cursor(), expression);
-  console.log('expression', expression);
-  console.log('tree', tree.toString());
-  console.log('smtLib', smtLib);
   return smtLib;
 }
 
@@ -117,6 +219,7 @@ function walkTree(cursor: TreeCursor, expression: string): string {
       return result;
     case 'NumericLiteral': // write the number
       return expression.substring(cursor.from, cursor.to);
+    case 'Comparison':
     case 'ArithmeticExpression':
       cursor.firstChild();
       let left = walkTree(cursor, expression);
@@ -125,7 +228,7 @@ function walkTree(cursor: TreeCursor, expression: string): string {
       cursor.nextSibling();
       let right = walkTree(cursor, expression);
       cursor.parent();
-      return "("+ operator + " " + left + " " + right + ")";
+      return "(" + operator + " " + left + " " + right + ")";
     case 'ParenthesizedExpression':
       cursor.firstChild();
       cursor.nextSibling();
@@ -154,5 +257,139 @@ function walkTree(cursor: TreeCursor, expression: string): string {
       return '';
   }
 }
+
+function walkTreeUnary(cursor: TreeCursor, expression: string, headerExpression: string): string {
+  switch (cursor.node.type.name) {
+    case 'UnaryTests': // start of the expression
+      cursor.firstChild();
+      let result = walkTreeUnary(cursor, expression, headerExpression);
+      cursor.parent();
+      return result;
+    case 'PositiveUnaryTests':
+      let positiveUnaryTestsList: Array<string> = [];
+      cursor.firstChild();
+      positiveUnaryTestsList.push(walkTreeUnary(cursor, expression, headerExpression));
+      while (cursor.nextSibling()) {
+        positiveUnaryTestsList.push(walkTreeUnary(cursor, expression, headerExpression));
+      }
+      cursor.parent();
+
+      return listWithExpression(positiveUnaryTestsList, 'or');
+    case 'PositiveUnaryTest':
+      cursor.firstChild();
+      let positiveUnaryTestString = positiveUnaryTest(cursor, expression, headerExpression);
+      cursor.parent();
+      return positiveUnaryTestString;
+    case 'Wildcard':
+      cursor.firstChild();
+      let wildcard = expression.substring(cursor.from, cursor.to);
+      if (wildcard === '-') {
+        cursor.parent();
+        return 'true';
+      } else {
+        // if the wildcard is not a dash, then it is not a 
+        cursor.parent();
+        return '';
+      }
+    default:
+      return '';
+  }
+
+
+}
+
+
+
+function positiveUnaryTest(cursor: TreeCursor, expression: string, headerExpression: string): string {
+  switch (cursor.node.type.name) {
+    case 'StringLiteral':
+    case 'NumericLiteral':
+    case 'BooleanLiteral':
+    case 'VariableName':
+      return "(= " + headerExpression + " " + expression.substring(cursor.from, cursor.to) + ")";
+
+    case 'SimplePositiveUnaryTest':
+      cursor.firstChild();
+      let simplePositiveUnaryTest = positiveUnaryTest(cursor, expression, headerExpression);
+      cursor.parent();
+      return simplePositiveUnaryTest;
+
+    case 'Interval':
+      // get the first bracket either ( or [
+      cursor.firstChild();
+      const openingBracket = expression.substring(cursor.from, cursor.to);
+
+      // initialise the lower and upper expression
+      let lowerExpression, upperExpression: string | null = null;
+
+      // move to the next sibling
+      // get the expression if there is one
+      cursor.nextSibling();
+      if (isAnExpressionInInterval(cursor)) {
+        lowerExpression = walkTree(cursor, expression);
+      }
+
+      // move to the next sibling
+      // get the expression if there is one
+      cursor.nextSibling();
+      if (isAnExpressionInInterval(cursor)) {
+        upperExpression = walkTree(cursor, expression);
+        cursor.nextSibling();
+      }
+
+      // get the last bracket either ) or ]
+      const closingBracket = expression.substring(cursor.from, cursor.to);
+
+      // moving back to the parent
+      cursor.parent();
+
+      let expressions: Array<string> = [];
+      if (lowerExpression !== null && lowerExpression != '' && lowerExpression !== undefined) {
+        if (openingBracket === '(') {
+          expressions.push("(> " + headerExpression + " " + lowerExpression + ")");
+        } else if (openingBracket === '[') {
+          expressions.push("(>= " + headerExpression + " " + lowerExpression + ")");
+        }
+      }
+      if (upperExpression !== null && upperExpression != '' && lowerExpression !== undefined) {
+        if (closingBracket === ')') {
+          expressions.push("(< " + headerExpression + " " + upperExpression + ")");
+        } else if (closingBracket === ']') {
+          expressions.push("(<= " + headerExpression + " " + upperExpression + ")");
+        }
+      }
+      return listWithExpression(expressions, 'and');
+
+    case 'CompareOp': // compare operator with a value or variable
+      let compareOp = expression.substring(cursor.from, cursor.to);
+      cursor.nextSibling();
+      let compareValue = walkTree(cursor, expression);
+      return '(' + compareOp + ' ' + headerExpression + ' ' + compareValue + ')';
+
+    default:
+      return '';
+  }
+
+
+}
+
+function isAnExpressionInInterval(cursor: TreeCursor): boolean {
+  switch (cursor.node.type.name) {
+    case Error:                // if the values in the interval is not there
+      return false;
+    default:
+      return true;
+  }
+}
+
+function listWithExpression(list: Array<string>, operator: string): string {
+  let length = list.length;
+  let output: string = list[length - 1];
+  for (let i = length - 2; i >= 0; i--) {
+    output = "(" + operator + " " + list[i] + " " + output + ")";
+  }
+  return output;
+}
+
 
 export { translateFeelToSmtLib, ParseType };

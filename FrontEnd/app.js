@@ -14,7 +14,7 @@ import bpmnDiagramXML from '../resources/defaultBpmnDiagram.bpmn';
 import dmnDiagramXML from '../Diagrams/FeelTranslation/DishDiagramMultibleOutputs.dmn';
 import './CSS/style.css';
 import CustomPaletteProvider from './bpmn/customPaletteProvider.js';
-import { feelToSmtLib } from './translationOfFeel.ts';
+import { jsonFromBpmnAndDmn } from './translationOfFeel.ts';
 
 // At the top level, create a moddle instance (once).
 export const dmnModdle = new DmnModdle();
@@ -142,12 +142,13 @@ async function exportAndConvert() {
     const { xml: dmnXml } = await dmnModeler.saveXML({ format: true });
     const dmnFile = new File([dmnXml], "decision-table.dmn", { type: "text/xml" });
 
-    feelToSmtLib(dmnModeler);
+    let diagramDecisionJsonFile = jsonFromBpmnAndDmn(bpmnModeler, dmnModeler);
 
     // Send both files to backend
     const formData = new FormData();
     formData.append("bpmn", bpmnFile);
     formData.append("dmn", dmnFile);
+    formData.append("ahhhhhhhh", diagramDecisionJsonFile);
 
     const response = await fetch("http://localhost:8080/convert/", {
       method: "POST",
