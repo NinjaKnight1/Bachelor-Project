@@ -11,7 +11,7 @@ import { is } from 'bpmn-js/lib/util/ModelUtil'; // Utility to check element typ
 
 // BPMN and DMN diagram XML files
 import bpmnDiagramXML from '../resources/defaultBpmnDiagram.bpmn';
-import dmnDiagramXML from '../Diagrams/FeelTranslation/DishDiagramMultibleOutputs.dmn';
+import dmnDiagramXML from '../resources/defaultDmnDiagram.dmn';
 import './CSS/style.css';
 import CustomPaletteProvider from './bpmn/customPaletteProvider.js';
 import { jsonFromBpmnAndDmn } from './translationOfFeel.ts';
@@ -172,30 +172,21 @@ async function exportAndConvert() {
 
 export async function goBackToBpmn() {
   try {
-    // 1) Get the current definitions from the active DMN viewer
-    // const dmnViewer = dmnModeler.getActiveViewer();
-    // const definitions = dmnJS.getDefinitions();
     const { xml: updatedDmnXml } = await dmnModeler.saveXML({ format: true });
-
-    // 2) Convert the updated definitions object to XML
-    // const moddle = dmnModeler.get('dmnModdle');
-    // const { xml: updatedDmnXml } = await moddle.toXML(definitions);
-
-    // 3) (Optional) Re-import to ensure the DMN modeler stays in sync, 
-    //    though if you immediately hide the DMN and don't plan to keep editing, 
-    //    you could skip the re-import:
     await dmnModeler.importXML(updatedDmnXml);
 
-    // 4) Switch UI: hide DMN container, show BPMN container
     document.getElementById('dmn-container').style.display = 'none';
     document.getElementById('bpmn-container').style.display = 'block';
 
-    // 5) Clear any "active task" references if you have them
+    // 🔽 Add this line to hide the DMN input field too
+    document.getElementById('dmn-inputs').style.display = 'none';
+
     activeTaskId = null;
   } catch (err) {
     console.error('Error saving DMN:', err);
     alert('Failed to save DMN. Check the console for details.');
   }
 }
+
 
 init();

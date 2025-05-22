@@ -55,6 +55,8 @@ export async function OLDopenTableFromTaskID(dmnModeler, decisionId) {
     }
     document.getElementById('bpmn-container').style.display = 'none';
     document.getElementById('dmn-container').style.display = 'block';
+    document.getElementById('dmn-inputs').style.display = 'block';
+
 
 }
 
@@ -87,6 +89,8 @@ export async function openTableFromTaskID(dmnModeler, decisionId, dmnDicisionTab
     // Hiding the BPMN div and showing the DMN div
     document.getElementById('bpmn-container').style.display = 'none';
     document.getElementById('dmn-container').style.display = 'block';
+    document.getElementById('dmn-inputs').style.display = 'block';
+
 
 }
 
@@ -146,3 +150,20 @@ function createNewDecision(decisionId, dmnDicisionTableName) {
     dmnModeler._setDefinitions(definitions);
     
 }
+
+function evaluateDecision() {
+    const inputValue = document.getElementById('dmnInputField').value;
+    const viewer = dmnModeler.getActiveViewer();
+    const decision = viewer.getDecision(); // get the current decision
+
+    viewer.getDecisionService().evaluate(decision.id, {
+        'yourInputVariableName': inputValue  // Replace with the actual input expression text
+    }).then(result => {
+        console.log("Evaluation result:", result);
+    }).catch(err => {
+        console.error("Evaluation failed", err);
+    });
+}
+
+// Attach the function to the global window object
+window.evaluateDecision = evaluateDecision;
