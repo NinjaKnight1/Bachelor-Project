@@ -14,7 +14,13 @@
   <div id="dmn-container" style="display: none;">
     <div class="canvas" id="dmn-canvas"></div>
     <button id="dmn-back-button">Back to BPMN</button>
-  </div>
+
+    <!-- Add inline style to hide initially -->
+    <div id="dmn-inputs" style="display: none;">
+      <label for="dmnInputField">Input Value:</label>
+      <input type="text" id="dmnInputField" placeholder="Enter input..." />
+    </div>
+  </div> <!-- ✅ this was missing -->
 
   <script src="app.js"></script>
 </body>
