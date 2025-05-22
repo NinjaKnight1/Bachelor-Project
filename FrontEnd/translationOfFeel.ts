@@ -47,7 +47,7 @@ export function jsonFromBpmnAndDmn(bpmnModeler: any, dmnModeler: any): File {
   let diagramDecision: DiagramDecision = parseDecisionFromfeelToSmtLib(bpmnModeler, dmnModeler);
 
   let diagramDecisionJson = JSON.stringify(diagramDecision);
-  const jsonOutputFile = new File([diagramDecisionJson], "decision-table.dmn", { type: "text/json" });
+  const jsonOutputFile = new File([diagramDecisionJson], "decisions.json", { type: "text/json" });
 
   return jsonOutputFile;
 }

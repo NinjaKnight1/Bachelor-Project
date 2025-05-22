@@ -25,7 +25,8 @@ os.makedirs(PETRI_NETS_DIR, exist_ok=True)
 @app.post("/convert/")
 async def convert_bpmn(
     bpmn: UploadFile = File(...),
-    dmn: UploadFile = File(None)  # Optional DMN file
+    dmn: UploadFile = File(None),  # Optional DMN file
+    DMN_JSON: UploadFile = File(None)  # Optional Decision file
 ):
     try:
         # Save BPMN
@@ -33,6 +34,12 @@ async def convert_bpmn(
         with open(bpmn_path, "wb") as f:
             f.write(await bpmn.read())
         print(f"BPMN saved at: {bpmn_path}")
+
+        if DMN_JSON:
+            DMN_JSON_path = os.path.join(PETRI_NETS_DIR, DMN_JSON.filename)
+            with open(DMN_JSON_path, "wb") as f:
+                f.write(await DMN_JSON.read())
+            print(f"Decision file saved at: {DMN_JSON_path}")
 
         # Save DMN (if provided)
         if dmn:
@@ -82,6 +89,7 @@ async def convert_bpmn(
         pn_vis_factory.save(gviz, diagram_path)
 
         return {"message": "Conversion successful!", "file_path": bpmn_path}
+    
 
     except Exception as e:
         return {"error": str(e)}

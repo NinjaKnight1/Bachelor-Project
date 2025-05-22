@@ -148,7 +148,7 @@ async function exportAndConvert() {
     const formData = new FormData();
     formData.append("bpmn", bpmnFile);
     formData.append("dmn", dmnFile);
-    formData.append("ahhhhhhhh", diagramDecisionJsonFile);
+    formData.append("DMN_JSON", diagramDecisionJsonFile);
 
     const response = await fetch("http://localhost:8080/convert/", {
       method: "POST",
