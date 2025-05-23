@@ -30,49 +30,77 @@ type Rule = {
   pre: string;
   post: string;
 }
-
-type DiagramDecision = {
-  bpmn: Array<string>;
-  dmn: Array<DecisionTable>;
+type GateGuards = {
+  sourceId: string;
+  targetId: string;
+  expression: string;
 }
 
-type PayloadGateDecision = { id: string; expression: string };
-type PayloadRule = { row: number; pre: string; post: string };
-type PayloadDecisionTable = { tableId: string; hitPolicy: string; inputs: string[]; outputs: string[]; rules: PayloadRule[] };
-type TransferPayload = { meta: { translation: "smt-lib" }; bpmn: { gateDecisions: PayloadGateDecision[] }; dmn: { decisionTables: DecisionTable[] } };
-
+type DiagramDecision = {
+  meta: string | null;
+  bpmn: Array<GateGuards>;
+  dmn: Array<DecisionTable>;
+}
 
 export function jsonFromBpmnAndDmn(bpmnModeler: any, dmnModeler: any): File {
 
   let diagramDecision: DiagramDecision = parseDecisionFromfeelToSmtLib(bpmnModeler, dmnModeler);
 
   let diagramDecisionJson = JSON.stringify(diagramDecision);
-  const jsonOutputFile = new File([diagramDecisionJson], "decisions.json", { type: "text/json" });
+  const jsonOutputFile = new File([diagramDecisionJson], "decision-table.dmn", { type: "text/json" });
 
   return jsonOutputFile;
 }
 
 
 export function parseDecisionFromfeelToSmtLib(bpmnModeler: any, dmnModeler: any): DiagramDecision {
-  // let payload = {} as TransferPayload;
   // payload.meta = { translation: "smt-lib" };
 
   let decisionTables = guardsFromDmnmodeler(dmnModeler);
-  // decision table
-  // for (const decisionTable of decisionTables) {
-  //   let rowNumber = 0;
-  //   // extracs all the input and output expressions from the decision table
-  //   for (const input of decisionTable.input) {
+
+  let gateGuards = guardsFromBpmnmodeler(bpmnModeler);
 
   let jsonOutput: DiagramDecision = {
-    bpmn: [],
+    meta: null,
+    bpmn: gateGuards,
     dmn: decisionTables
   }
-  //   }
 
-  // }
-  // const json = JSON.stringify(payload, null, 2);
   return jsonOutput;
+}
+
+
+function guardsFromBpmnmodeler(bpmnModeler: any): Array<GateGuards> {
+  let guardsExpressionList: Array<GateGuards> = [];
+
+  const definitions = bpmnModeler._definitions;
+  const rootElements: Array<any> = definitions.rootElements;
+  rootElements.forEach((rootElement: any) => {
+    let artifacts: Array<any> = rootElement.artifacts;
+    artifacts.forEach((artifact: any) => {
+      switch (artifact.$type) {
+        case 'bpmn:Association':
+          const artifactSourceRef = artifact.sourceRef;
+          if (artifactSourceRef.sourceRef.$type == 'bpmn:ExclusiveGateway') {
+            const gateText = artifact.targetRef.text;
+            const translatedGateText = translateFeelToSmtLib(gateText, ParseType.Expression);
+            const sourceId = artifactSourceRef.sourceRef.id;
+            const targetId = artifactSourceRef.targetRef.id;
+            let guard: GateGuards = {
+              sourceId: sourceId,
+              targetId: targetId,
+              expression: translatedGateText,
+            }
+            guardsExpressionList.push(guard);
+          }
+          break;
+
+        default:
+          break;
+      }
+    });
+  });
+  return guardsExpressionList;
 }
 
 
