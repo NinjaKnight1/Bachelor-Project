@@ -26,7 +26,7 @@ os.makedirs(PETRI_NETS_DIR, exist_ok=True)
 async def convert_bpmn(
     bpmn: UploadFile = File(...),
     dmn: UploadFile = File(None),  # Optional DMN file
-    DMN_JSON: UploadFile = File(None)  # Optional Decision file
+    decision_guards_json: UploadFile = File(None)  # Optional Decision file
 ):
     try:
         # Save BPMN
@@ -35,10 +35,10 @@ async def convert_bpmn(
             f.write(await bpmn.read())
         print(f"BPMN saved at: {bpmn_path}")
 
-        if DMN_JSON:
-            DMN_JSON_path = os.path.join(PETRI_NETS_DIR, DMN_JSON.filename)
+        if decision_guards_json:
+            DMN_JSON_path = os.path.join(PETRI_NETS_DIR, decision_guards_json.filename)
             with open(DMN_JSON_path, "wb") as f:
-                f.write(await DMN_JSON.read())
+                f.write(await decision_guards_json.read())
             print(f"Decision file saved at: {DMN_JSON_path}")
 
         # Save DMN (if provided)

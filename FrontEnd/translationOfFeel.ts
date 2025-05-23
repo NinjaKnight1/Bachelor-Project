@@ -43,21 +43,18 @@ type DiagramDecision = {
 }
 
 export function jsonFromBpmnAndDmn(bpmnModeler: any, dmnModeler: any): File {
-
   let diagramDecision: DiagramDecision = parseDecisionFromfeelToSmtLib(bpmnModeler, dmnModeler);
 
   let diagramDecisionJson = JSON.stringify(diagramDecision);
-  const jsonOutputFile = new File([diagramDecisionJson], "decision-table.dmn", { type: "text/json" });
+  const jsonOutputFile = new File([diagramDecisionJson], "diagramDecisions.json", { type: "text/json" });
 
   return jsonOutputFile;
 }
 
 
 export function parseDecisionFromfeelToSmtLib(bpmnModeler: any, dmnModeler: any): DiagramDecision {
-  // payload.meta = { translation: "smt-lib" };
 
   let decisionTables = guardsFromDmnmodeler(dmnModeler);
-
   let gateGuards = guardsFromBpmnmodeler(bpmnModeler);
 
   let jsonOutput: DiagramDecision = {
