@@ -1,0 +1,110 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="https://www.omg.org/spec/DMN/20191111/MODEL/" xmlns:dmndi="https://www.omg.org/spec/DMN/20191111/DMNDI/" xmlns:biodi="http://bpmn.io/schema/dmn/biodi/2.0" xmlns:dc="http://www.omg.org/spec/DMN/20191111/DC/" xmlns:di="http://www.omg.org/spec/DMN/20191111/DI/" id="definitions" name="definitions" namespace="http://camunda.org/schema/1.0/dmn">
+  <decision id="Activity_1dfjj35" name="find recipe">
+    <decisionTable id="Activity_1dfjj35_decisionTable">
+      <input id="Activity_1dfjj35_inputClause">
+        <inputExpression id="Activity_1dfjj35_inputExpression" typeRef="string">
+          <text>Dietary Preference</text>
+        </inputExpression>
+      </input>
+      <output id="Activity_1dfjj35_outputClause" name="Suggested Recipe" typeRef="string" biodi:width="192" />
+      <rule id="DecisionRule_18al123">
+        <inputEntry id="UnaryTests_0l0fia1">
+          <text>"vegetarian"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_1gvbztb">
+          <text>"Veggie Stir-fry"</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_0v1pnsz">
+        <inputEntry id="UnaryTests_0x32q0k">
+          <text>"no preference"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_0gx9v15">
+          <text>"Spaghetti Bolognese"</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_0yzfpaw">
+        <inputEntry id="UnaryTests_0ftlpzt">
+          <text>"vegan"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_059shzf">
+          <text>"Lentil Soup"</text>
+        </outputEntry>
+      </rule>
+    </decisionTable>
+  </decision>
+  <decision id="Activity_0qgwwu7" name="order takeout">
+    <decisionTable id="Activity_0qgwwu7_decisionTable" hitPolicy="FIRST">
+      <input id="Activity_0qgwwu7_inputClause" biodi:width="192">
+        <inputExpression id="Activity_0qgwwu7_inputExpression" typeRef="number">
+          <text>Budget</text>
+        </inputExpression>
+      </input>
+      <input id="InputClause_015948k">
+        <inputExpression id="LiteralExpression_03flj5u" typeRef="string">
+          <text>Cousine Preference</text>
+        </inputExpression>
+      </input>
+      <output id="Activity_0qgwwu7_outputClause" name="Takeout Option" typeRef="string" />
+      <rule id="DecisionRule_1ugpaws">
+        <inputEntry id="UnaryTests_0iwcvdd">
+          <text>&lt;75</text>
+        </inputEntry>
+        <inputEntry id="UnaryTests_0cfya3d">
+          <text>"American"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_0u64cpa">
+          <text>"McDonald's"</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_06a0cwj">
+        <inputEntry id="UnaryTests_0el6ykc">
+          <text>[75..150]</text>
+        </inputEntry>
+        <inputEntry id="UnaryTests_0rutbi4">
+          <text>"Italian"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_09dx2q2">
+          <text>"Pizza"</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_0yxzqu4">
+        <inputEntry id="UnaryTests_11a037t">
+          <text>[75..150]</text>
+        </inputEntry>
+        <inputEntry id="UnaryTests_1xm30rd">
+          <text>"Asian"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_07wsfa2">
+          <text>"Noodles"</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_14tq03j">
+        <inputEntry id="UnaryTests_0372mtf">
+          <text>&gt;150</text>
+        </inputEntry>
+        <inputEntry id="UnaryTests_17oobet">
+          <text>"Italian"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_02flurk">
+          <text>"Pasta"</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_0jtv4ux">
+        <inputEntry id="UnaryTests_1vo2ver">
+          <text>&gt;150</text>
+        </inputEntry>
+        <inputEntry id="UnaryTests_0ttf6hr">
+          <text>"Asian"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_00uats7">
+          <text>"Sushi"</text>
+        </outputEntry>
+      </rule>
+    </decisionTable>
+  </decision>
+  <dmndi:DMNDI>
+    <dmndi:DMNDiagram id="DMNDiagram_06u1ky7" />
+  </dmndi:DMNDI>
+</definitions>
