@@ -1,0 +1,158 @@
+<?xml version='1.0' encoding='utf-8'?>
+<pnml>
+  <net id="" type="http://www.pnml.org/version-2009/grammar/pnmlcoremodel">
+    <name>
+      <text />
+    </name>
+    <page id="n0">
+      <place id="ent_Event_0j9jetr">
+        <name>
+          <text>ent_Event_0j9jetr</text>
+        </name>
+      </place>
+      <place id="exi_Gateway_1mg7c4a">
+        <name>
+          <text>exi_Gateway_1mg7c4a</text>
+        </name>
+      </place>
+      <place id="source">
+        <name>
+          <text>source</text>
+        </name>
+        <initialMarking>
+          <text>1</text>
+        </initialMarking>
+      </place>
+      <place id="sink">
+        <name>
+          <text>sink</text>
+        </name>
+      </place>
+      <place id="ent_Activity_13vb2rf">
+        <name>
+          <text>ent_Activity_13vb2rf</text>
+        </name>
+      </place>
+      <transition id="Activity_13vb2rf">
+        <name>
+          <text>cook food</text>
+        </name>
+      </transition>
+      <transition id="Activity_1v54rdp">
+        <name>
+          <text>buy groceries</text>
+        </name>
+      </transition>
+      <transition id="Event_0j9jetr">
+        <name>
+          <text>Event_0j9jetr</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="43d5f3e2-95ee-445a-a685-1b9e4fb4ba5a" />
+      </transition>
+      <arc id="5527376912" source="ent_Activity_13vb2rf" target="Activity_13vb2rf" />
+      <arc id="5527507600" source="Activity_1v54rdp" target="ent_Activity_13vb2rf" />
+      <arc id="5527384400" source="ent_Event_0j9jetr" target="Event_0j9jetr" />
+      <arc id="5527507920" source="Activity_13vb2rf" target="ent_Event_0j9jetr" />
+      <arc id="5527508304" source="exi_Gateway_1mg7c4a" target="Activity_1v54rdp" />
+      <arc id="5527506768" source="Event_0j9jetr" target="sink" />
+      <transition id="Activity_1dfjj35_1">
+        <name>
+          <text>find recipe_1</text>
+        </name>
+      </transition>
+      <transition id="Activity_1dfjj35_2">
+        <name>
+          <text>find recipe_2</text>
+        </name>
+      </transition>
+      <transition id="Activity_1dfjj35_3">
+        <name>
+          <text>find recipe_3</text>
+        </name>
+      </transition>
+      <arc id="5527507792_1" source="Activity_1dfjj35_1" target="exi_Gateway_1mg7c4a"><name><text>Label to 1</text></name></arc>
+      <arc id="5527507792_2" source="Activity_1dfjj35_2" target="exi_Gateway_1mg7c4a"><name><text>Label to 2</text></name></arc>
+      <arc id="5527507792_3" source="Activity_1dfjj35_3" target="exi_Gateway_1mg7c4a"><name><text>Label to 3</text></name></arc>
+      <arc id="5527508048_1" source="source" target="Activity_1dfjj35_1"><name><text>input rule: "vegetarian"</text></name></arc>
+      <arc id="5527508048_2" source="source" target="Activity_1dfjj35_2"><name><text>input rule: "no preference"</text></name></arc>
+      <arc id="5527508048_3" source="source" target="Activity_1dfjj35_3"><name><text>input rule: "vegan"</text></name></arc>
+      <transition id="Activity_0qgwwu7_1">
+        <name>
+          <text>order takeout_1</text>
+        </name>
+      </transition>
+      <transition id="Activity_0qgwwu7_2">
+        <name>
+          <text>order takeout_2</text>
+        </name>
+      </transition>
+      <transition id="Activity_0qgwwu7_3">
+        <name>
+          <text>order takeout_3</text>
+        </name>
+      </transition>
+      <transition id="Activity_0qgwwu7_4">
+        <name>
+          <text>order takeout_4</text>
+        </name>
+      </transition>
+      <transition id="Activity_0qgwwu7_5">
+        <name>
+          <text>order takeout_5</text>
+        </name>
+      </transition>
+      <transition id="Activity_0qgwwu7_6">
+        <name>
+          <text>order takeout_6</text>
+        </name>
+      </transition>
+      <transition id="Activity_0qgwwu7_7">
+        <name>
+          <text>order takeout_7</text>
+        </name>
+      </transition>
+      <transition id="Activity_0qgwwu7_8">
+        <name>
+          <text>order takeout_8</text>
+        </name>
+      </transition>
+      <transition id="Activity_0qgwwu7_9">
+        <name>
+          <text>order takeout_9</text>
+        </name>
+      </transition>
+      <transition id="Activity_0qgwwu7_10">
+        <name>
+          <text>order takeout_10</text>
+        </name>
+      </transition>
+      <arc id="5527507280_1" source="Activity_0qgwwu7_1" target="ent_Event_0j9jetr"><name><text>Label to 1</text></name></arc>
+      <arc id="5527507280_2" source="Activity_0qgwwu7_2" target="ent_Event_0j9jetr"><name><text>Label to 2</text></name></arc>
+      <arc id="5527507280_3" source="Activity_0qgwwu7_3" target="ent_Event_0j9jetr"><name><text>Label to 3</text></name></arc>
+      <arc id="5527507280_4" source="Activity_0qgwwu7_4" target="ent_Event_0j9jetr"><name><text>Label to 4</text></name></arc>
+      <arc id="5527507280_5" source="Activity_0qgwwu7_5" target="ent_Event_0j9jetr"><name><text>Label to 5</text></name></arc>
+      <arc id="5527507280_6" source="Activity_0qgwwu7_6" target="ent_Event_0j9jetr"><name><text>Label to 6</text></name></arc>
+      <arc id="5527507280_7" source="Activity_0qgwwu7_7" target="ent_Event_0j9jetr"><name><text>Label to 7</text></name></arc>
+      <arc id="5527507280_8" source="Activity_0qgwwu7_8" target="ent_Event_0j9jetr"><name><text>Label to 8</text></name></arc>
+      <arc id="5527507280_9" source="Activity_0qgwwu7_9" target="ent_Event_0j9jetr"><name><text>Label to 9</text></name></arc>
+      <arc id="5527507280_10" source="Activity_0qgwwu7_10" target="ent_Event_0j9jetr"><name><text>Label to 10</text></name></arc>
+      <arc id="5527508176_1" source="exi_Gateway_1mg7c4a" target="Activity_0qgwwu7_1"><name><text>input rule: &lt;75</text></name></arc>
+    <arc id="5527508176_2" source="exi_Gateway_1mg7c4a" target="Activity_0qgwwu7_2"><name><text>input rule: "American"</text></name></arc>
+    <arc id="5527508176_3" source="exi_Gateway_1mg7c4a" target="Activity_0qgwwu7_3"><name><text>input rule: [75..150]</text></name></arc>
+    <arc id="5527508176_4" source="exi_Gateway_1mg7c4a" target="Activity_0qgwwu7_4"><name><text>input rule: "Italian"</text></name></arc>
+    <arc id="5527508176_5" source="exi_Gateway_1mg7c4a" target="Activity_0qgwwu7_5"><name><text>input rule: [75..150]</text></name></arc>
+    <arc id="5527508176_6" source="exi_Gateway_1mg7c4a" target="Activity_0qgwwu7_6"><name><text>input rule: "Asian"</text></name></arc>
+    <arc id="5527508176_7" source="exi_Gateway_1mg7c4a" target="Activity_0qgwwu7_7"><name><text>input rule: &gt;150</text></name></arc>
+    <arc id="5527508176_8" source="exi_Gateway_1mg7c4a" target="Activity_0qgwwu7_8"><name><text>input rule: "Italian"</text></name></arc>
+    <arc id="5527508176_9" source="exi_Gateway_1mg7c4a" target="Activity_0qgwwu7_9"><name><text>input rule: &gt;150</text></name></arc>
+    <arc id="5527508176_10" source="exi_Gateway_1mg7c4a" target="Activity_0qgwwu7_10"><name><text>input rule: "Asian"</text></name></arc>
+    </page>
+    <finalmarkings>
+      <marking>
+        <place idref="sink">
+          <text>1</text>
+        </place>
+      </marking>
+    </finalmarkings>
+  </net>
+</pnml>

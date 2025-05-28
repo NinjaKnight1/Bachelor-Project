@@ -60,13 +60,14 @@ type DiagramDecision = {
 export async function jsonFromBpmnAndDmn(bpmnModeler: any, dmnModeler: any): Promise<File | null> {
   let diagramDecision: DiagramDecision = parseDecisionFromfeelToSmtLib(bpmnModeler, dmnModeler);
 
-  if ((diagramDecision.variableName.length > 0)) {
-    const variables = await promptVariables(diagramDecision.variableName as string[]);
-    if (!variables) {
-      return null;
-    }
-    diagramDecision.variableName = variables;
-  }
+  // if ((diagramDecision.variableName.length > 0)) {
+  //   const variables = await promptVariables(diagramDecision.variableName as string[]);
+  //   if (!variables) {
+  //     return null;
+  //   }
+  //   diagramDecision.variableName = variables;
+  // }
+  console.log(diagramDecision);
   let diagramDecisionJson = JSON.stringify(diagramDecision);
   const jsonOutputFile = new File([diagramDecisionJson], "diagramDecisions.json", { type: "text/json" });
 

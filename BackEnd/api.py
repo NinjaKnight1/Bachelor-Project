@@ -5,7 +5,7 @@ import pm4py
 from pm4py.visualization.petri_net import visualizer as pn_vis_factory
 
 from replace import split_pnml_element
-from sortBusinessTask import business_task_list
+from json_mani import business_task_list_json
 
 app = FastAPI()
 
@@ -26,8 +26,10 @@ os.makedirs(PETRI_NETS_DIR, exist_ok=True)
 async def convert_bpmn(
     bpmn: UploadFile = File(...),
     dmn: UploadFile = File(None),  # Optional DMN file
-    decision_guards_json: UploadFile = File(None)  # Optional Decision file
-):
+    #json files
+    json: UploadFile = File(None)  # Optional JSON file for DMN rules
+    ):
+
     try:
         # Save BPMN
         bpmn_path = os.path.join(PETRI_NETS_DIR, bpmn.filename)
@@ -35,19 +37,17 @@ async def convert_bpmn(
             f.write(await bpmn.read())
         print(f"BPMN saved at: {bpmn_path}")
 
-        if decision_guards_json:
-            DMN_JSON_path = os.path.join(PETRI_NETS_DIR, decision_guards_json.filename)
-            with open(DMN_JSON_path, "wb") as f:
-                f.write(await decision_guards_json.read())
-            print(f"Decision file saved at: {DMN_JSON_path}")
+        # Save json
+        if json:
+            json_path = os.path.join(PETRI_NETS_DIR, json.filename)
+            with open(json_path, "wb") as f:
+                f.write(await json.read())
+            print(f"JSON saved at: {json_path}")
+        else:
+            json_path = None
+            print("No JSON file provided.")
 
-        # Save DMN (if provided)
-        if dmn:
-            dmn_path = os.path.join(PETRI_NETS_DIR, dmn.filename)
-            with open(dmn_path, "wb") as f:
-                f.write(await dmn.read())
-            print(f"DMN saved at: {dmn_path}")
-
+    
         # Read BPMN model from saved file
         bpmn_model = pm4py.read_bpmn(bpmn_path)
 
@@ -60,13 +60,14 @@ async def convert_bpmn(
         # Read the PNML file
         pnml_file_path = bpmn_path.replace(".bpmn", ".pnml")
 
+        json_path = "petri_nets/diagramDecisions.json"  # Path to the DMN JSON file
 
         # Determine the execution order of the PNML file
-        businessT_list = business_task_list(bpmn_path, dmn_path)
+        businessT_list = business_task_list_json(bpmn_path, json_path)
         print("BusinessTask List and Number:", businessT_list)
    
         for activity in businessT_list:
-            # Activity is a tuple (task_id, num, rules)
+            # Activity is a tuple ((task_id, [(pre, post), ...]),...)
             task_id, rules = activity
 
             print(f"Splitting element with ID: {task_id} into {len(rules)} elements.")
@@ -77,7 +78,6 @@ async def convert_bpmn(
                 rules=rules,                 # Rules for the task
                 output_path=pnml_file_path   # Output file path
             )
-            print(f"Element {activity} split into 2 new elements.")
 
         # Read the modified PNML file
         modified_petri_net, im, fm = pm4py.read_pnml(pnml_file_path)

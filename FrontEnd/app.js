@@ -151,7 +151,7 @@ async function exportAndConvert() {
     const formData = new FormData();
     formData.append("bpmn", bpmnFile);
     formData.append("dmn", dmnFile);
-    formData.append("decision_guards_json", diagramDecisionJsonFile);
+    formData.append("json", diagramDecisionJsonFile);
 
     const response = await fetch("http://localhost:8080/convert/", {
       method: "POST",
@@ -180,9 +180,6 @@ export async function goBackToBpmn() {
 
     document.getElementById('dmn-container').style.display = 'none';
     document.getElementById('bpmn-container').style.display = 'block';
-
-    // 🔽 Add this line to hide the DMN input field too
-    document.getElementById('dmn-inputs').style.display = 'none';
 
     activeTaskId = null;
   } catch (err) {
