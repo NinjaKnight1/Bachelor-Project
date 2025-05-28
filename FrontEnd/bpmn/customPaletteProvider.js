@@ -132,7 +132,7 @@ CustomPaletteProvider.prototype.getPaletteEntries = function () {
     },
     'create.start-event': createAction(
       'bpmn:StartEvent', 'event', 'bpmn-icon-start-event-none',
-      translate('Create staasdfdsafdsafdsart event')
+      translate('Create start event')
     ),
     // 'create.intermediate-event': createAction(
     //   'bpmn:IntermediateThrowEvent', 'event', 'bpmn-icon-intermediate-event-none',
