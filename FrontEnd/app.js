@@ -142,7 +142,10 @@ async function exportAndConvert() {
     const { xml: dmnXml } = await dmnModeler.saveXML({ format: true });
     const dmnFile = new File([dmnXml], "decision-table.dmn", { type: "text/xml" });
 
-    let diagramDecisionJsonFile = jsonFromBpmnAndDmn(bpmnModeler, dmnModeler);
+    let diagramDecisionJsonFile = await jsonFromBpmnAndDmn(bpmnModeler, dmnModeler);
+    if (!diagramDecisionJsonFile) {
+      throw new Error("Failed to convert BPMN and DMN");
+    }
 
     // Send both files to backend
     const formData = new FormData();
@@ -188,5 +191,64 @@ export async function goBackToBpmn() {
   }
 }
 
+function showVariableModal(variableNames) {
+  return new Promise(resolve => {
+    const modal = document.getElementById('variable-modal');
+    const rowsParent = document.getElementById('variable-rows');
+    const form = document.getElementById('variable-form');
+    const cancelBtn = document.getElementById('modal-cancel');
+    const closeBtn = document.getElementById('modal-close');
+
+    // build rows
+    rowsParent.innerHTML = '';
+    variableNames.forEach(name => {
+      const row = document.createElement('div');
+      row.className = 'variable-row';
+      row.innerHTML = `
+        <label>${name}</label>
+        <select class="var-type">
+          <option value="string">string</option>
+          <option value="number">number</option>
+          <option value="boolean">boolean</option>
+        </select>
+        <input class="var-value" placeholder="Value"/>
+      `;
+      rowsParent.appendChild(row);
+    });
+
+    // handlers
+    const hide = res => { modal.style.display = 'none'; resolve(res); };
+
+    cancelBtn.onclick = () => hide(null);
+    closeBtn.onclick = () => hide(null);
+
+    form.onsubmit = e => {
+      e.preventDefault();
+      let valid = true, variables = [];
+
+      rowsParent.querySelectorAll('.variable-row').forEach(row => {
+        const name = row.querySelector('label').textContent;
+        const type = row.querySelector('.var-type').value;
+        const input = row.querySelector('.var-value');
+        const value = input.value.trim();
+        input.classList.remove('error');
+
+        if (!value) {
+          valid = false;
+          input.classList.add('error');
+        }
+        variables.push({ name, type, value });
+      });
+
+      if (!valid) {
+        alert('Please fill in every value.');
+        return;             // stay open
+      }
+      hide(variables);      // continue
+    };
+
+    modal.style.display = 'flex';
+  });
+}
 
 init();

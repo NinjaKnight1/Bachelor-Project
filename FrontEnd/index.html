@@ -15,14 +15,31 @@
     <div class="canvas" id="dmn-canvas"></div>
     <button id="dmn-back-button">Back to BPMN</button>
 
-    <!-- Add inline style to hide initially -->
     <div id="dmn-inputs" style="display: none;">
       <label for="dmnInputField">Input Value:</label>
       <input type="text" id="dmnInputField" placeholder="Enter input..." />
     </div>
-  </div> <!-- ✅ this was missing -->
+  </div>
 
   <script src="app.js"></script>
+  <!---- Variable definition pop-up (hidden by default) -->
+  <div id="variable-modal" class="modal" style="display:none">
+    <div class="modal-content">
+      <h2>Define variables</h2>
+
+      <form id="variable-form">
+        <div id="variable-rows"><!-- rows injected here --></div>
+
+        <div class="modal-actions">
+          <button type="button" id="modal-cancel">Cancel</button>
+          <button type="submit" id="modal-submit">Continue</button>
+        </div>
+      </form>
+
+      <span id="modal-close" class="modal-close">&times;</span>
+    </div>
+  </div>
+
 </body>
 
 </html>

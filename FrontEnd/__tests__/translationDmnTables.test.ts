@@ -1,6 +1,6 @@
 import { readFileSync } from 'fs';
 import { join } from 'path';
-import { parseDecisionFromfeelToSmtLib } from '../translationOfFeel'
+import { guardsFromDmnmodeler } from '../translationOfFeel'
 
 import BpmnModeler from 'bpmn-js/dist/bpmn-modeler.development.js';
 import DmnModeler from 'dmn-js/dist/dmn-modeler.development.js';
@@ -26,7 +26,7 @@ describe('DMN', () => {
     });
 
     it('handles a range [1..5)', () => {
-      const output = parseDecisionFromfeelToSmtLib(bpmnModeler, dmnModeler);
+      const output = guardsFromDmnmodeler(dmnModeler);
       expect(output).toBe('');
     });
 
