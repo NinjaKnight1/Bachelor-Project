@@ -26,7 +26,7 @@
   background:#fff; padding:1.5rem; border-radius:8px;
   max-height:80vh; overflow:auto; min-width:320px;
 }
-.modal-close{           /* × in top-right corner */
+.modal-close{
   position:absolute; top:.5rem; right:1rem; cursor:pointer;
   font-size:1.5rem; line-height:1;
 }
