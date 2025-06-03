@@ -27,7 +27,26 @@ describe('DMN', () => {
 
     it('handles a range [1..5)', () => {
       const output = guardsFromDmnmodeler(dmnModeler);
-      expect(output).toBe('');
+      const expected: ReturnType<typeof guardsFromDmnmodeler> = [
+    [
+      {
+        tableId: 'dish-decision',
+        hitPolicy: 'UNIQUE',
+        inputs: [{ expression: 'season' }, { expression: 'guestCount' }],
+        outputs: [{ expression: 'desiredDish' }],
+        rules: [
+          { row: 0, pre: '(and (not (= season "Winter")) (<= guestCount 8))', post: '(= desiredDish "Spareribs")' },
+          { row: 1, pre: '(and (= season "Winter") (> guestCount 8))', post: '(= desiredDish "Pasta")' },
+          { row: 2, pre: '(and (= season "Summer") (> guestCount 10))', post: '(= desiredDish "Light salad")' },
+          { row: 3, pre: '(and (= season "Summer") (<= guestCount 10))', post: '(= desiredDish "Beans salad")' },
+          { row: 4, pre: '(and (= season "Spring") (< guestCount 10))', post: '(= desiredDish "Stew")' },
+          { row: 5, pre: '(and (= season "Spring") (>= guestCount 10))', post: '(= desiredDish "Steak")' }
+        ]
+      }
+    ],
+    new Set(['season', 'guestCount', 'desiredDish'])
+  ];
+      expect(output).toEqual(expected);
     });
 
   });
