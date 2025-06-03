@@ -1,6 +1,6 @@
 {
   "name": "bachelor-project-dbpmn-to-dpn",
-  "version": "0.0.0",
+  "version": "1.0.0",
   "description": "Automated Conversion of Integrated BPMN and DMN Models into Data Petri Nets",
   "scripts": {
     "all": "run-s build",
