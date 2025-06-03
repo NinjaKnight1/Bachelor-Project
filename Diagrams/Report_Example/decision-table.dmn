@@ -2,51 +2,51 @@
 <definitions xmlns="https://www.omg.org/spec/DMN/20191111/MODEL/" xmlns:dmndi="https://www.omg.org/spec/DMN/20191111/DMNDI/" xmlns:biodi="http://bpmn.io/schema/dmn/biodi/2.0" xmlns:dc="http://www.omg.org/spec/DMN/20191111/DC/" xmlns:di="http://www.omg.org/spec/DMN/20191111/DI/" id="definitions" name="definitions" namespace="http://camunda.org/schema/1.0/dmn">
   <decision id="Activity_1dfjj35" name="find recipe">
     <decisionTable id="Activity_1dfjj35_decisionTable">
-      <input id="Activity_1dfjj35_inputClause">
+      <input id="Activity_1dfjj35_inputClause" label="Suggested Recipe">
         <inputExpression id="Activity_1dfjj35_inputExpression" typeRef="string">
-          <text>Dietary Preference</text>
+          <text>suggestedRecipe</text>
         </inputExpression>
       </input>
-      <output id="Activity_1dfjj35_outputClause" name="Suggested Recipe" typeRef="string" biodi:width="192" />
+      <output id="Activity_1dfjj35_outputClause" label="Desired" name="desired" typeRef="boolean" biodi:width="192" />
       <rule id="DecisionRule_18al123">
         <inputEntry id="UnaryTests_0l0fia1">
-          <text>"vegetarian"</text>
+          <text>"Veggie Stir-fry"</text>
         </inputEntry>
         <outputEntry id="LiteralExpression_1gvbztb">
-          <text>"Veggie Stir-fry"</text>
+          <text>true</text>
         </outputEntry>
       </rule>
       <rule id="DecisionRule_0v1pnsz">
         <inputEntry id="UnaryTests_0x32q0k">
-          <text>"no preference"</text>
+          <text>"Spaghetti Bolognese"</text>
         </inputEntry>
         <outputEntry id="LiteralExpression_0gx9v15">
-          <text>"Spaghetti Bolognese"</text>
+          <text>true</text>
         </outputEntry>
       </rule>
       <rule id="DecisionRule_0yzfpaw">
         <inputEntry id="UnaryTests_0ftlpzt">
-          <text>"vegan"</text>
+          <text>"Lentil Soup"</text>
         </inputEntry>
         <outputEntry id="LiteralExpression_059shzf">
-          <text>"Lentil Soup"</text>
+          <text>false</text>
         </outputEntry>
       </rule>
     </decisionTable>
   </decision>
   <decision id="Activity_0qgwwu7" name="order takeout">
     <decisionTable id="Activity_0qgwwu7_decisionTable" hitPolicy="FIRST">
-      <input id="Activity_0qgwwu7_inputClause" biodi:width="192">
+      <input id="Activity_0qgwwu7_inputClause" label="Budget" biodi:width="192">
         <inputExpression id="Activity_0qgwwu7_inputExpression" typeRef="number">
-          <text>Budget</text>
+          <text>budget</text>
         </inputExpression>
       </input>
-      <input id="InputClause_015948k">
+      <input id="InputClause_015948k" label="Cousine Preference">
         <inputExpression id="LiteralExpression_03flj5u" typeRef="string">
-          <text>Cousine Preference</text>
+          <text>cousinePreference</text>
         </inputExpression>
       </input>
-      <output id="Activity_0qgwwu7_outputClause" name="Takeout Option" typeRef="string" />
+      <output id="Activity_0qgwwu7_outputClause" label="Takeout Option" name="takeoutOption" typeRef="string" />
       <rule id="DecisionRule_1ugpaws">
         <inputEntry id="UnaryTests_0iwcvdd">
           <text>&lt;75</text>
