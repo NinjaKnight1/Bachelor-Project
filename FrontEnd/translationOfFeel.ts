@@ -60,14 +60,13 @@ type DiagramDecision = {
 export async function jsonFromBpmnAndDmn(bpmnModeler: any, dmnModeler: any): Promise<File | null> {
   let diagramDecision: DiagramDecision = parseDecisionFromfeelToSmtLib(bpmnModeler, dmnModeler);
 
-  // if ((diagramDecision.variableName.length > 0)) {
-  //   const variables = await promptVariables(diagramDecision.variableName as string[]);
-  //   if (!variables) {
-  //     return null;
-  //   }
-  //   diagramDecision.variableName = variables;
-  // }
-  console.log(diagramDecision);
+  if ((diagramDecision.variableName.length > 0)) {
+    const variables = await promptVariables(diagramDecision.variableName as string[]);
+    if (!variables) {
+      return null;
+    }
+    diagramDecision.variableName = variables;
+  }
   let diagramDecisionJson = JSON.stringify(diagramDecision);
   const jsonOutputFile = new File([diagramDecisionJson], "diagramDecisions.json", { type: "text/json" });
 
@@ -187,6 +186,9 @@ export function guardsFromDmnmodeler(dmnModeler: any): [Array<DecisionTable>, Se
 
         // TODO 
         // break as there is nothing here
+        if (rules == undefined || rules == null){
+          break;
+        }
 
         for (let rowNumber = 0; rowNumber < rules.length; rowNumber++) {
           let rulesRow = rules.at(rowNumber);
@@ -206,7 +208,6 @@ export function guardsFromDmnmodeler(dmnModeler: any): [Array<DecisionTable>, Se
           }
 
           let inputRowRule = listWithExpression(inputRow, 'and');
-          allInputRows.push(inputRowRule);
 
           let preCondition: string = '';
           let postCondition: string = '';
@@ -215,15 +216,20 @@ export function guardsFromDmnmodeler(dmnModeler: any): [Array<DecisionTable>, Se
           switch (hitPolicy) {
             case hitPolicyType.Unique:
               preCondition = inputRowRule;
-
               break;
             case hitPolicyType.First:
-              preCondition = inputRowRule;
+              if (rowNumber == 0) {
+                preCondition = inputRowRule;
+              } else {
+                let tempPreCon = listWithExpression(allInputRows, 'and');
+                preCondition = '(and (not ' + tempPreCon + ') ' + inputRowRule + ')';
+              }
               break;
             default:
-              return
+              break;
           }
 
+          allInputRows.push(inputRowRule);
           for (let outputColumn = 0; outputColumn < outputEntry.length; outputColumn++) {
             const outputText = outputEntry.at(outputColumn).text;
             const [translatedText, inputVariableNames] = translateFeelToSmtLib(outputText, ParseType.Unary, outputHeader.at(outputColumn)?.expression);
@@ -330,7 +336,7 @@ function walkTree(cursor: TreeCursor, expression: string, variableNameSet: Set<s
 
 function walkTreeUnary(cursor: TreeCursor, expression: string, headerExpression: string, variableNameSet: Set<string>): string {
   switch (cursor.node.type.name) {
-    case 'UnaryTests': // start of the expression
+    case 'UnaryTests':
       cursor.firstChild();
       let result = walkTreeUnary(cursor, expression, headerExpression, variableNameSet);
       cursor.parent();
@@ -357,10 +363,15 @@ function walkTreeUnary(cursor: TreeCursor, expression: string, headerExpression:
         cursor.parent();
         return 'true';
       } else {
-        // if the wildcard is not a dash, then it is not a 
+        // if the wildcard is not a dash, then it is not a supported character
         cursor.parent();
         return '';
       }
+    case 'not':
+      cursor.nextSibling(); // '('
+      cursor.nextSibling(); // value within parentheses
+      let arg = walkTreeUnary(cursor, expression, headerExpression, variableNameSet);
+      return '(not ' + arg + ')';
     default:
       return '';
   }

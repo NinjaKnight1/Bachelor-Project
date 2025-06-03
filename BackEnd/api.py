@@ -37,6 +37,11 @@ async def convert_bpmn(
             f.write(await bpmn.read())
         print(f"BPMN saved at: {bpmn_path}")
 
+        dmn_path = os.path.join(PETRI_NETS_DIR, dmn.filename)
+        with open(dmn_path, "wb") as f:
+            f.write(await dmn.read())
+        print(f"BPMN saved at: {dmn_path}")
+
         # Save json
         if json:
             json_path = os.path.join(PETRI_NETS_DIR, json.filename)
@@ -96,4 +101,4 @@ async def convert_bpmn(
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8080)
+    uvicorn.run(app, host="0.0.0.0", port=8081)

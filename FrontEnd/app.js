@@ -84,7 +84,7 @@ async function convertBPMNToPetriNet(file) {
   formData.append("file", file, "diagram.bpmn");
 
   try {
-    const response = await fetch("http://localhost:8080/convert/",
+    const response = await fetch("http://localhost:8081/convert/",
       {
         method: "POST",
         body: formData,
@@ -153,7 +153,7 @@ async function exportAndConvert() {
     formData.append("dmn", dmnFile);
     formData.append("json", diagramDecisionJsonFile);
 
-    const response = await fetch("http://localhost:8080/convert/", {
+    const response = await fetch("http://localhost:8081/convert/", {
       method: "POST",
       body: formData,
       headers: { Accept: "application/json" }
