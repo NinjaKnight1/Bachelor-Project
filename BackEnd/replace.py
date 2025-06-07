@@ -64,7 +64,7 @@ def split_pnml_element(
 
         # attach guard expression (using pre-condition)
 
-        guard_input = f"pre: {pre_cond} \n post: {post_cond}"
+        guard_input = f"PRE: {pre_cond} \n POST: {post_cond}"
         _attach_guard(new_tr, guard_input)
 
         page.append(new_tr)
