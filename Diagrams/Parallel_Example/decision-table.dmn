@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<definitions xmlns="https://www.omg.org/spec/DMN/20191111/MODEL/" xmlns:dmndi="https://www.omg.org/spec/DMN/20191111/DMNDI/" xmlns:dc="http://www.omg.org/spec/DMN/20191111/DC/" xmlns:di="http://www.omg.org/spec/DMN/20191111/DI/" id="definitions" name="definitions" namespace="http://camunda.org/schema/1.0/dmn">
+  <decision id="Activity_12h1ym2" name="Unique">
+    <decisionTable id="Activity_12h1ym2_decisionTable">
+      <input id="Activity_12h1ym2_inputClause" label="Num">
+        <inputExpression id="Activity_12h1ym2_inputExpression" typeRef="number">
+          <text></text>
+        </inputExpression>
+      </input>
+      <output id="Activity_12h1ym2_outputClause" name="Confirm" typeRef="boolean" />
+      <rule id="DecisionRule_10uabwn">
+        <inputEntry id="UnaryTests_1tobiop">
+          <text>&gt;3</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_0rfugoo">
+          <text>true</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_1mo81ok">
+        <inputEntry id="UnaryTests_09ja9d1">
+          <text>&lt;=3</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_01dm9fo">
+          <text>false</text>
+        </outputEntry>
+      </rule>
+    </decisionTable>
+  </decision>
+  <decision id="Activity_0k5pz63" name="First">
+    <decisionTable id="Activity_0k5pz63_decisionTable" hitPolicy="FIRST">
+      <input id="Activity_0k5pz63_inputClause" label="Weather">
+        <inputExpression id="Activity_0k5pz63_inputExpression" typeRef="string">
+          <text></text>
+        </inputExpression>
+      </input>
+      <output id="Activity_0k5pz63_outputClause" label="Clothing" typeRef="string" />
+      <rule id="DecisionRule_0tj5fpb">
+        <inputEntry id="UnaryTests_0jwz1w0">
+          <text>"Cold"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_0j9f3f2">
+          <text>"Winter Jacket"</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_0dngxga">
+        <inputEntry id="UnaryTests_1pdulq4">
+          <text>"Warm"</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_03gnn3e">
+          <text>"T-Shirt"</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_0buh78k">
+        <inputEntry id="UnaryTests_1x66ifi">
+          <text>-</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_1hjrev4">
+          <text>"Light Jacket"</text>
+        </outputEntry>
+      </rule>
+    </decisionTable>
+  </decision>
+  <dmndi:DMNDI>
+    <dmndi:DMNDiagram id="DMNDiagram_1viyp20" />
+  </dmndi:DMNDI>
+</definitions>

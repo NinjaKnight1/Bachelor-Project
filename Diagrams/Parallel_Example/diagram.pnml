@@ -1,0 +1,108 @@
+<?xml version='1.0' encoding='utf-8'?>
+<pnml>
+  <net id="" type="http://www.pnml.org/version-2009/grammar/pnmlcoremodel">
+    <name>
+      <text />
+    </name>
+    <page id="n0">
+      <place id="ent_Activity_12h1ym2">
+        <name>
+          <text>ent_Activity_12h1ym2</text>
+        </name>
+      </place>
+      <place id="Flow_1a9b5eu">
+        <name>
+          <text>Flow_1a9b5eu</text>
+        </name>
+      </place>
+      <place id="ent_Activity_0k5pz63">
+        <name>
+          <text>ent_Activity_0k5pz63</text>
+        </name>
+      </place>
+      <place id="source">
+        <name>
+          <text>source</text>
+        </name>
+        <initialMarking>
+          <text>1</text>
+        </initialMarking>
+      </place>
+      <place id="sink">
+        <name>
+          <text>sink</text>
+        </name>
+      </place>
+      <place id="Flow_1kfsfsj">
+        <name>
+          <text>Flow_1kfsfsj</text>
+        </name>
+      </place>
+      <transition id="42b770ed-31a8-4ed7-922e-ab97d2f8a020">
+        <name>
+          <text>42b770ed-31a8-4ed7-922e-ab97d2f8a020</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="c82b40c9-be22-4cc3-a2a5-fe2ce44fab07" />
+      </transition>
+      <transition id="55a70786-e87f-487b-9594-e6780f4afad8">
+        <name>
+          <text>55a70786-e87f-487b-9594-e6780f4afad8</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="d7f8b0e5-699b-4ea8-846d-f2143d3dd3be" />
+      </transition>
+      <arc id="4713473680" source="55a70786-e87f-487b-9594-e6780f4afad8" target="ent_Activity_12h1ym2" />
+      <arc id="4713473552" source="55a70786-e87f-487b-9594-e6780f4afad8" target="ent_Activity_0k5pz63" />
+      <arc id="4713473936" source="42b770ed-31a8-4ed7-922e-ab97d2f8a020" target="sink" />
+      <arc id="4713470608" source="Flow_1kfsfsj" target="42b770ed-31a8-4ed7-922e-ab97d2f8a020" />
+      <arc id="4713471120" source="Flow_1a9b5eu" target="42b770ed-31a8-4ed7-922e-ab97d2f8a020" />
+      <arc id="4713467216" source="source" target="55a70786-e87f-487b-9594-e6780f4afad8" />
+      <transition id="Activity_12h1ym2_1" guard="PRE: (&amp;gt;  3) &#10; POST: (= Confirm true)">
+        <name>
+          <text>Unique_1</text>
+        </name>
+      <guard><text>PRE: (&gt;  3) 
+ POST: (= Confirm true)</text></guard></transition>
+      <transition id="Activity_12h1ym2_2" guard="PRE: (&amp;lt;=  3) &#10; POST: (= Confirm false)">
+        <name>
+          <text>Unique_2</text>
+        </name>
+      <guard><text>PRE: (&lt;=  3) 
+ POST: (= Confirm false)</text></guard></transition>
+      <arc id="4713472336_1" source="Activity_12h1ym2_1" target="Flow_1a9b5eu" />
+      <arc id="4713472336_2" source="Activity_12h1ym2_2" target="Flow_1a9b5eu" />
+      <arc id="4713464400_1" source="ent_Activity_12h1ym2" target="Activity_12h1ym2_1" />
+      <arc id="4713464400_2" source="ent_Activity_12h1ym2" target="Activity_12h1ym2_2" />
+      <transition id="Activity_0k5pz63_1" guard="PRE: (=  &quot;Cold&quot;) &#10; POST: (=  &quot;Winter Jacket&quot;)">
+        <name>
+          <text>First_1</text>
+        </name>
+      <guard><text>PRE: (=  "Cold") 
+ POST: (=  "Winter Jacket")</text></guard></transition>
+      <transition id="Activity_0k5pz63_2" guard="PRE: (and (not (=  &quot;Cold&quot;)) (=  &quot;Warm&quot;)) &#10; POST: (=  &quot;T-Shirt&quot;)">
+        <name>
+          <text>First_2</text>
+        </name>
+      <guard><text>PRE: (and (not (=  "Cold")) (=  "Warm")) 
+ POST: (=  "T-Shirt")</text></guard></transition>
+      <transition id="Activity_0k5pz63_3" guard="PRE: (and (not (or (=  &quot;Cold&quot;) (=  &quot;Warm&quot;))) true) &#10; POST: (=  &quot;Light Jacket&quot;)">
+        <name>
+          <text>First_3</text>
+        </name>
+      <guard><text>PRE: (and (not (or (=  "Cold") (=  "Warm"))) true) 
+ POST: (=  "Light Jacket")</text></guard></transition>
+      <arc id="4713473808_1" source="Activity_0k5pz63_1" target="Flow_1kfsfsj" />
+      <arc id="4713473808_2" source="Activity_0k5pz63_2" target="Flow_1kfsfsj" />
+      <arc id="4713473808_3" source="Activity_0k5pz63_3" target="Flow_1kfsfsj" />
+      <arc id="4713465040_1" source="ent_Activity_0k5pz63" target="Activity_0k5pz63_1" />
+    <arc id="4713465040_2" source="ent_Activity_0k5pz63" target="Activity_0k5pz63_2" />
+    <arc id="4713465040_3" source="ent_Activity_0k5pz63" target="Activity_0k5pz63_3" />
+    </page>
+    <finalmarkings>
+      <marking>
+        <place idref="sink">
+          <text>1</text>
+        </place>
+      </marking>
+    </finalmarkings>
+  </net>
+</pnml>
