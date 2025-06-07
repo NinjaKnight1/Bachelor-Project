@@ -1,13 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<definitions xmlns="https://www.omg.org/spec/DMN/20191111/MODEL/" xmlns:dmndi="https://www.omg.org/spec/DMN/20191111/DMNDI/" xmlns:dc="http://www.omg.org/spec/DMN/20191111/DC/" xmlns:di="http://www.omg.org/spec/DMN/20191111/DI/" id="definitions" name="definitions" namespace="http://camunda.org/schema/1.0/dmn">
+<definitions xmlns="https://www.omg.org/spec/DMN/20191111/MODEL/" xmlns:dmndi="https://www.omg.org/spec/DMN/20191111/DMNDI/" xmlns:biodi="http://bpmn.io/schema/dmn/biodi/2.0" xmlns:dc="http://www.omg.org/spec/DMN/20191111/DC/" xmlns:di="http://www.omg.org/spec/DMN/20191111/DI/" id="definitions" name="definitions" namespace="http://camunda.org/schema/1.0/dmn">
   <decision id="Activity_12h1ym2" name="Unique">
     <decisionTable id="Activity_12h1ym2_decisionTable">
       <input id="Activity_12h1ym2_inputClause" label="Num">
         <inputExpression id="Activity_12h1ym2_inputExpression" typeRef="number">
-          <text></text>
+          <text>Num</text>
         </inputExpression>
       </input>
-      <output id="Activity_12h1ym2_outputClause" name="Confirm" typeRef="boolean" />
+      <output id="Activity_12h1ym2_outputClause" name="Confirm" typeRef="boolean" biodi:width="191" />
       <rule id="DecisionRule_10uabwn">
         <inputEntry id="UnaryTests_1tobiop">
           <text>&gt;3</text>
@@ -30,10 +30,10 @@
     <decisionTable id="Activity_0k5pz63_decisionTable" hitPolicy="FIRST">
       <input id="Activity_0k5pz63_inputClause" label="Weather">
         <inputExpression id="Activity_0k5pz63_inputExpression" typeRef="string">
-          <text></text>
+          <text>Weather</text>
         </inputExpression>
       </input>
-      <output id="Activity_0k5pz63_outputClause" label="Clothing" typeRef="string" />
+      <output id="Activity_0k5pz63_outputClause" name="Clothing" typeRef="string" />
       <rule id="DecisionRule_0tj5fpb">
         <inputEntry id="UnaryTests_0jwz1w0">
           <text>"Cold"</text>
