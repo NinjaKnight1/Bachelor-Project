@@ -221,7 +221,7 @@ export function guardsFromDmnmodeler(dmnModeler: any): [Array<DecisionTable>, Se
               if (rowNumber == 0) {
                 preCondition = inputRowRule;
               } else {
-                let tempPreCon = listWithExpression(allInputRows, 'and');
+                let tempPreCon = listWithExpression(allInputRows, 'or');
                 preCondition = '(and (not ' + tempPreCon + ') ' + inputRowRule + ')';
               }
               break;
