@@ -4,21 +4,24 @@ from xml.sax.saxutils import escape
 
 
 
-def _attach_guard(transition: ET.Element, guard_expr, add_element: bool = True) -> None:
-    """Attach *guard_expr* to *transition*.
+from xml.sax.saxutils import escape as _esc
+import xml.etree.ElementTree as ET
 
-    *guard_expr* is escaped and stored in the `guard` XML attribute.  If
-    *add_element* is *True* (default) a sibling `<guard><text>…</text></guard>`
-    element is also created for ISO-15909 compatible tools.
-    """
-    # 1. as attribute  (escape &, <, >, ')
-    transition.set("guard", escape(guard_expr, {"'": "&apos;"}))
 
-    # 2. as child element (optional but widely supported)
+def _attach_guard(
+    transition: ET.Element,
+    guard_expr: str,
+    add_element: bool = True,
+) -> None:
+
+
+    transition.set("guard", _esc(guard_expr, {'"': "&quot;"}))
+    
     if add_element:
         guard_el = ET.SubElement(transition, "guard")
         text_el = ET.SubElement(guard_el, "text")
         text_el.text = guard_expr
+
 
 
 
