@@ -25,7 +25,7 @@ describe('DMN', () => {
       await dmnModeler.importXML(xml);
     });
 
-    it('handles a range [1..5)', () => {
+    it('handles the translation of a decision table', () => {
       const output = guardsFromDmnmodeler(dmnModeler);
       const expected: ReturnType<typeof guardsFromDmnmodeler> = [
     [

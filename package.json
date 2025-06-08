@@ -7,7 +7,7 @@
     "build": "webpack --mode production",
     "dev": "webpack-dev-server --static=public --open",
     "start": "run-s dev",
-    "test": "jest",
+    "test": "jest --verbose",
     "test:print": "jest --verbose=false",
     "test:debug": "jest --runInBand",
     "test:watch": "jest --watch"

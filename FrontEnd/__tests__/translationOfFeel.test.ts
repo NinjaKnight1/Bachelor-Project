@@ -98,7 +98,7 @@ describe('translationOfFeel – Unary tests', () => {
 });
 
 describe('translationOfFeel – Expressions', () => {
-  describe('translationOfFeel – Arithmetic expressions', () => {
+  describe('Arithmetic expressions', () => {
     it('handles a simple number', () => {
       let [translatedExpression, variableNameList] = translateFeelToSmtLib('3', ParseType.Expression);
       expect(translatedExpression).toBe(
@@ -169,7 +169,7 @@ describe('translationOfFeel – Expressions', () => {
     expect(translatedExpression).toBe(smtExpectedText);
   });
 
-  describe('translationOfFeel – string expressions', () => {
+  describe('String expressions', () => {
     it('handles a string', () => {
       let [translatedExpression, variableNameList] = translateFeelToSmtLib('"Hello World"', ParseType.Expression);
       expect(translatedExpression).toBe(
@@ -181,7 +181,7 @@ describe('translationOfFeel – Expressions', () => {
   });
 
 
-  describe('translationOfFeel – Variable expressions', () => {
+  describe('Variable expressions', () => {
     it('handles a variable', () => {
       let [translatedExpression, variableNameList] = translateFeelToSmtLib('variable', ParseType.Expression);
       expect(translatedExpression).toBe(
@@ -193,7 +193,7 @@ describe('translationOfFeel – Expressions', () => {
   });
 
   //boolean expressions
-  describe('translationOfFeel – Boolean expressions', () => {
+  describe('Boolean expressions', () => {
 
     it('handles a boolean', () => {
       let [translatedExpression, variableNameList] = translateFeelToSmtLib('true', ParseType.Expression);
