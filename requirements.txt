@@ -4,3 +4,4 @@ uvicorn
 pm4py
 lxml
 graphviz
+python-multipart

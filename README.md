@@ -6,7 +6,7 @@ You first have to download the nodes modules you have to run
 
 ```bash
 npm install
-pip install requirements.txt
+pip install -r requirements.txt
 
 ```
 graphviz also needs to be installed 
