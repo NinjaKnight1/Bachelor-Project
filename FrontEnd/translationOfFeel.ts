@@ -39,7 +39,8 @@ type Rule = {
 type GateGuards = {
   sourceId: string;
   targetId: string;
-  expression: string;
+  pre: string;
+  post: string;
 }
 
 export type Variable = {
@@ -118,7 +119,8 @@ function guardsFromBpmnmodeler(bpmnModeler: any): [Array<GateGuards>, Set<string
             let guard: GateGuards = {
               sourceId: sourceId,
               targetId: targetId,
-              expression: translatedGateText,
+              pre: translatedGateText,
+              post: "true",
             }
             guardsExpressionList.push(guard);
           }
@@ -186,7 +188,7 @@ export function guardsFromDmnmodeler(dmnModeler: any): [Array<DecisionTable>, Se
 
         // TODO 
         // break as there is nothing here
-        if (rules == undefined || rules == null){
+        if (rules == undefined || rules == null) {
           break;
         }
 
