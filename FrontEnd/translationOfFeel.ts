@@ -1,6 +1,7 @@
-import { parseUnaryTests, parseExpression, unaryTest } from 'feelin';
+import { parseUnaryTests, parseExpression } from 'feelin';
 import { Tree, TreeCursor } from '@lezer/common';
 import { promptVariables } from './modalCreation';
+import { UnsupportedFeelError, TranslationError } from './customErrors';
 const DecisionTableType = 'decisionTable';
 const Error = '⚠';
 
@@ -59,42 +60,61 @@ type DiagramDecision = {
 
 
 export async function jsonFromBpmnAndDmn(bpmnModeler: any, dmnModeler: any): Promise<File | null> {
-  let diagramDecision: DiagramDecision = parseDecisionFromfeelToSmtLib(bpmnModeler, dmnModeler);
+  try {
+    let diagramDecision: DiagramDecision = parseDecisionFromfeelToSmtLib(bpmnModeler, dmnModeler);
 
-  if ((diagramDecision.variableName.length > 0)) {
-    const variables = await promptVariables(diagramDecision.variableName as string[]);
-    if (!variables) {
-      return null;
+    if ((diagramDecision.variableName.length > 0)) {
+      const variables = await promptVariables(diagramDecision.variableName as string[]);
+      if (!variables) {
+        return null;
+      }
+      diagramDecision.variableName = variables;
     }
-    diagramDecision.variableName = variables;
-  }
-  let diagramDecisionJson = JSON.stringify(diagramDecision);
-  const jsonOutputFile = new File([diagramDecisionJson], "diagramDecisions.json", { type: "text/json" });
+    let diagramDecisionJson = JSON.stringify(diagramDecision);
+    const jsonOutputFile = new File([diagramDecisionJson], "diagramDecisions.json", { type: "text/json" });
 
-  return jsonOutputFile;
+    return jsonOutputFile;
+  }
+  catch (error) {
+    if (error instanceof TranslationError) {
+      throw new TranslationError(error.error, "DMN/BPMN");
+    } else {
+      throw new TranslationError([error], "DMN/BPMN");
+    }
+  }
 }
 
 
 export function parseDecisionFromfeelToSmtLib(bpmnModeler: any, dmnModeler: any): DiagramDecision {
+  try {
+    let [decisionTableList, decisionTableVariableNameSet] = guardsFromDmnmodeler(dmnModeler);
+    let [gateGuardList, gateGuardVariableNameSet] = guardsFromBpmnmodeler(bpmnModeler);
+    gateGuardVariableNameSet.forEach(name => decisionTableVariableNameSet.add(name));
+    let variableNameList = [...decisionTableVariableNameSet];
+    let jsonOutput: DiagramDecision = {
+      meta: null,
+      bpmn: gateGuardList,
+      dmn: decisionTableList,
+      variableName: variableNameList,
+    }
 
-  let [decisionTableList, decisionTableVariableNameSet] = guardsFromDmnmodeler(dmnModeler);
-  let [gateGuardList, gateGuardVariableNameSet] = guardsFromBpmnmodeler(bpmnModeler);
-  gateGuardVariableNameSet.forEach(name => decisionTableVariableNameSet.add(name));
-  let variableNameList = [...decisionTableVariableNameSet];
-  let jsonOutput: DiagramDecision = {
-    meta: null,
-    bpmn: gateGuardList,
-    dmn: decisionTableList,
-    variableName: variableNameList,
+    return jsonOutput;
+
+  } catch (error) {
+    if (error instanceof TranslationError) {
+      throw new TranslationError(error.error, "DMN/BPMN");
+    } else {
+      throw new TranslationError([error], "DMN/BPMN");
+    }
   }
 
-  return jsonOutput;
 }
 
 
 function guardsFromBpmnmodeler(bpmnModeler: any): [Array<GateGuards>, Set<string>] {
   let guardsExpressionList: Array<GateGuards> = [];
   let variableNameSet = new Set<string>();
+  let errorList: Array<string> = [];
 
   const definitions = bpmnModeler._definitions;
   const rootElementList: Array<any> = definitions.rootElements || [];
@@ -112,17 +132,23 @@ function guardsFromBpmnmodeler(bpmnModeler: any): [Array<GateGuards>, Set<string
           const artifactSourceRef = artifact.sourceRef;
           if (artifactSourceRef.sourceRef.$type == 'bpmn:ExclusiveGateway') {
             const gateText = artifact.targetRef.text;
-            const [translatedGateText, gateGuardVariableNameSet] = translateFeelToSmtLib(gateText, ParseType.Expression);
-            gateGuardVariableNameSet.forEach(name => variableNameSet.add(name));
-            const sourceId = artifactSourceRef.sourceRef.id;
-            const targetId = artifactSourceRef.targetRef.id;
-            let guard: GateGuards = {
-              sourceId: sourceId,
-              targetId: targetId,
-              pre: translatedGateText,
-              post: "true",
+            try {
+              const [translatedGateText, gateGuardVariableNameSet] = translateFeelToSmtLib(gateText, ParseType.Expression);
+              gateGuardVariableNameSet.forEach(name => variableNameSet.add(name));
+              const sourceId = artifactSourceRef.sourceRef.id;
+              const targetId = artifactSourceRef.targetRef.id;
+              let guard: GateGuards = {
+                sourceId: sourceId,
+                targetId: targetId,
+                pre: translatedGateText,
+                post: "true",
+              }
+              guardsExpressionList.push(guard);
+            } catch (error) {
+              if (error instanceof UnsupportedFeelError) {
+                errorList.push(error.message);
+              }
             }
-            guardsExpressionList.push(guard);
           }
           break;
 
@@ -130,6 +156,9 @@ function guardsFromBpmnmodeler(bpmnModeler: any): [Array<GateGuards>, Set<string
           break;
       }
     }
+  }
+  if (errorList.length > 0) {
+    throw new TranslationError(errorList);
   }
   return [guardsExpressionList, variableNameSet];
 }
@@ -143,7 +172,7 @@ export function guardsFromDmnmodeler(dmnModeler: any): [Array<DecisionTable>, Se
   let decisionTableList = new Array<DecisionTable>();
   // set of variable names
   let variableNameSet = new Set<string>();
-
+  let errorList: Array<string> = [];
 
   // Going through all the list in the decision table
   viewList.forEach(view => {
@@ -165,18 +194,29 @@ export function guardsFromDmnmodeler(dmnModeler: any): [Array<DecisionTable>, Se
           const inputExpression = input.inputExpression;
           const inputText = inputExpression.text;
           // translating the text from feel to smtlib
-          const [translatedText, inputVariableNames] = translateFeelToSmtLib(inputText, ParseType.Expression);
-          inputVariableNames.forEach(name => variableNameSet.add(name));
-          inputHeader.push({ expression: translatedText });
+          try {
+            const [translatedText, inputVariableNames] = translateFeelToSmtLib(inputText, ParseType.Expression);
+            inputVariableNames.forEach(name => variableNameSet.add(name));
+            inputHeader.push({ expression: translatedText });
+          } catch (error) {
+            if (error instanceof UnsupportedFeelError) {
+              errorList.push(error.message + ` in decisiontable with the name "${view.name}", in the input header`);
+            }
+          }
         });
 
         // Going through all output headers and translating the expressions
         decisionLogicInfo.output.forEach((output: any) => {
           const outputName = output.name;
-
-          const [translatedText, inputVariableNames] = translateFeelToSmtLib(outputName, ParseType.Expression);
-          inputVariableNames.forEach(name => variableNameSet.add(name));
-          outputHeader.push({ expression: translatedText });
+          try {
+            const [translatedText, inputVariableNames] = translateFeelToSmtLib(outputName, ParseType.Expression);
+            inputVariableNames.forEach(name => variableNameSet.add(name));
+            outputHeader.push({ expression: translatedText });
+          } catch (error) {
+            if (error instanceof UnsupportedFeelError) {
+              errorList.push(error.message + ` in decisiontable with the name "${view.name}", in the output header`);
+            }
+          }
 
         });
 
@@ -202,11 +242,22 @@ export function guardsFromDmnmodeler(dmnModeler: any): [Array<DecisionTable>, Se
           const outputEntry = rulesRow.outputEntry;
 
           for (let inputColumn = 0; inputColumn < inputEntry.length; inputColumn++) {
-            const inputText = inputEntry.at(inputColumn).text;
+            let inputText = inputEntry.at(inputColumn).text;
+            if (inputText == ''){
+              inputText = '-'; 
+            }
+            try {
+              const [translatedText, inputVariableNames] = translateFeelToSmtLib(inputText, ParseType.Unary, inputHeader.at(inputColumn)?.expression);
+              inputVariableNames.forEach(name => variableNameSet.add(name));
+              inputRow.push(translatedText);
 
-            const [translatedText, inputVariableNames] = translateFeelToSmtLib(inputText, ParseType.Unary, inputHeader.at(inputColumn)?.expression);
-            inputVariableNames.forEach(name => variableNameSet.add(name));
-            inputRow.push(translatedText);
+            } catch (error) {
+              console.error(error);
+              if (error instanceof UnsupportedFeelError) {
+                console.log(error.message);
+                errorList.push(error.message + ` in decisiontable with the name "${view.name}", there is a error in input column ${inputColumn} and row ${rowNumber}`);
+              }
+            }
           }
 
           let inputRowRule = listWithExpression(inputRow, 'and');
@@ -234,9 +285,16 @@ export function guardsFromDmnmodeler(dmnModeler: any): [Array<DecisionTable>, Se
           allInputRows.push(inputRowRule);
           for (let outputColumn = 0; outputColumn < outputEntry.length; outputColumn++) {
             const outputText = outputEntry.at(outputColumn).text;
-            const [translatedText, inputVariableNames] = translateFeelToSmtLib(outputText, ParseType.Unary, outputHeader.at(outputColumn)?.expression);
-            inputVariableNames.forEach(name => variableNameSet.add(name));
-            outputRow.push(translatedText);
+            try {
+              const [translatedText, inputVariableNames] = translateFeelToSmtLib(outputText, ParseType.Unary, outputHeader.at(outputColumn)?.expression);
+              inputVariableNames.forEach(name => variableNameSet.add(name));
+              outputRow.push(translatedText);
+
+            } catch (error) {
+              if (error instanceof UnsupportedFeelError) {
+                errorList.push(error.message + ` in decisiontable with the name "${view.name}", there is a error in output column ${outputColumn} and row ${rowNumber}`);
+              }
+            }
           }
 
           postCondition = listWithExpression(outputRow, 'and');
@@ -265,6 +323,9 @@ export function guardsFromDmnmodeler(dmnModeler: any): [Array<DecisionTable>, Se
     }
   });
 
+  if (errorList.length > 0) {
+    throw new TranslationError(errorList);
+  }
   return [decisionTableList, variableNameSet];
 
 }
@@ -273,7 +334,7 @@ export function guardsFromDmnmodeler(dmnModeler: any): [Array<DecisionTable>, Se
 function translateFeelToSmtLib(expression: string, parseType: ParseType, headerExpression: string = ''): [string, Set<string>] {
   // Parse the expression using the feel parser
   if (expression == '' || expression == null) {
-    return ['', new Set()];
+    throw new UnsupportedFeelError('Expression is empty', expression);
   }
   let variableNameSet = new Set<string>();
   let tree: Tree;
@@ -281,6 +342,7 @@ function translateFeelToSmtLib(expression: string, parseType: ParseType, headerE
   switch (parseType) {
     case ParseType.Unary:
       tree = parseUnaryTests(expression);
+      console.log(tree.toString(),expression);
       smtLib = walkTreeUnary(tree.cursor(), expression, headerExpression, variableNameSet);
       break;
     case ParseType.Expression:
@@ -332,7 +394,7 @@ function walkTree(cursor: TreeCursor, expression: string, variableNameSet: Set<s
       return expression.substring(cursor.from, cursor.to);
 
     default:
-      return '';
+      throw new UnsupportedFeelError(cursor.node.type.name, expression);
   }
 }
 
@@ -375,10 +437,8 @@ function walkTreeUnary(cursor: TreeCursor, expression: string, headerExpression:
       let arg = walkTreeUnary(cursor, expression, headerExpression, variableNameSet);
       return '(not ' + arg + ')';
     default:
-      return '';
+      throw new UnsupportedFeelError(cursor.node.type.name, expression);
   }
-
-
 }
 
 
@@ -453,7 +513,7 @@ function positiveUnaryTest(cursor: TreeCursor, expression: string, headerExpress
       return '(' + compareOp + ' ' + headerExpression + ' ' + compareValue + ')';
 
     default:
-      return '';
+      throw new UnsupportedFeelError(cursor.node.type.name, expression);
   }
 
 

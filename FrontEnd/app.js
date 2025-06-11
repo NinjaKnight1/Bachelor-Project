@@ -15,6 +15,7 @@ import dmnDiagramXML from '../resources/defaultDmnDiagram.dmn';
 import './CSS/style.css';
 import CustomPaletteProvider from './bpmn/customPaletteProvider.js';
 import { jsonFromBpmnAndDmn } from './translationOfFeel.ts';
+import { TranslationError } from './customErrors.ts';
 
 // At the top level, create a moddle instance (once).
 export const dmnModdle = new DmnModdle();
@@ -147,6 +148,7 @@ async function exportAndConvert() {
       throw new Error("Failed to convert BPMN and DMN");
     }
 
+
     // Send both files to backend
     const formData = new FormData();
     formData.append("bpmn", bpmnFile);
@@ -167,6 +169,10 @@ async function exportAndConvert() {
     console.log("Conversion successful:", data);
     alert("BPMN and DMN successfully converted and saved!");
   } catch (error) {
+    if (error instanceof TranslationError) {
+      console.log(error);
+      alert("Translation failed. Check the console for details.");
+    }
     console.error("Error exporting BPMN/DMN:", error);
     alert("Export or conversion failed. Check the console for details.");
   }
