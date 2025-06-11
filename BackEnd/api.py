@@ -4,8 +4,8 @@ from fastapi.middleware.cors import CORSMiddleware
 import pm4py
 from pm4py.visualization.petri_net import visualizer as pn_vis_factory
 
-from replace import split_pnml_element
-from json_mani import business_task_list_json
+from replace import split_pnml_element, split_gateway
+from json_mani import business_task_list_json, _Xor_gatewayRules
 
 app = FastAPI()
 
@@ -83,6 +83,22 @@ async def convert_bpmn(
                 rules=rules,                 # Rules for the task
                 output_path=pnml_file_path   # Output file path
             )
+            
+        print("PNML file modified successfully.")
+
+        XorGateway_list = _Xor_gatewayRules(bpmn_path, json_path)
+        for source_id, rules in XorGateway_list:
+            for rule, (_, target_id) in rules:        # _ is the duplicate source id
+                split_gateway(
+                    pnml_path=pnml_file_path,
+                    gateway_id=source_id,
+                    decision_rule=rule,
+                    source_id=source_id,
+                    target_id=target_id,
+                    output_path=pnml_file_path
+                )
+
+        print("Xor Gateway split successfully.")
 
         # Read the modified PNML file
         modified_petri_net, im, fm = pm4py.read_pnml(pnml_file_path)

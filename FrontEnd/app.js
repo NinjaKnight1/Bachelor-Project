@@ -10,8 +10,8 @@ import DmnModdle from 'dmn-moddle';
 import { is } from 'bpmn-js/lib/util/ModelUtil'; // Utility to check element type
 
 // BPMN and DMN diagram XML files
-import bpmnDiagramXML from '../resources/defaultBpmnDiagram.bpmn';
-import dmnDiagramXML from '../resources/defaultDmnDiagram.dmn';
+import bpmnDiagramXML from '../petri_nets/diagram.bpmn';
+import dmnDiagramXML from '../petri_nets/decision-table.dmn';
 import './CSS/style.css';
 import CustomPaletteProvider from './bpmn/customPaletteProvider.js';
 import { jsonFromBpmnAndDmn } from './translationOfFeel.ts';

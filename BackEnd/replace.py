@@ -1,9 +1,6 @@
 import xml.etree.ElementTree as ET
 import copy
-from xml.sax.saxutils import escape
-
-
-
+import re
 from xml.sax.saxutils import escape as _esc
 import xml.etree.ElementTree as ET
 
@@ -103,3 +100,60 @@ def split_pnml_element(
     page.remove(target)
     tree.write(output_path, encoding='utf-8', xml_declaration=True)
 
+def split_gateway(
+        pnml_path: str,
+        gateway_id: str,
+        decision_rule: str,
+        source_id: str,
+        target_id: str,
+        output_path: str
+):
+    tree = ET.parse(pnml_path)
+    page = tree.find('./net/page')
+    if page is None:
+        raise ValueError("No <page> element found in PNML file.")
+
+    gw = page.find(f".//*[@id='{gateway_id}']")
+    if gw is None:
+        raise ValueError(f"Gateway with id '{gateway_id}' not found.")
+
+    # --- 1. build safe IDs ----------------------------------------------------
+    safe = re.sub(r'[^A-Za-z0-9_]', '_', decision_rule)
+    tr_id = f"{gateway_id}_{safe}_tr"
+    pl_id = f"{gateway_id}_{safe}_pl"
+
+    # --- 2. create transition -------------------------------------------------
+    new_tr = ET.Element('transition', id=tr_id)
+    name_tr = ET.SubElement(new_tr, 'name')
+    ET.SubElement(name_tr, 'text').text = tr_id
+    _attach_guard(new_tr, decision_rule)      # helper in replace.py :contentReference[oaicite:0]{index=0}
+
+    # --- 3. create place ------------------------------------------------------
+    new_pl = ET.Element('place', id=pl_id)
+    name_pl = ET.SubElement(new_pl, 'name')
+    ET.SubElement(name_pl, 'text').text = pl_id
+
+    # --- 4. create legal arcs -------------------------------------------------
+    page.append(ET.Element('arc',
+        id=f"{source_id}_to_{tr_id}",
+        source=source_id,
+        target=tr_id))
+    page.append(ET.Element('arc',
+        id=f"{tr_id}_to_{pl_id}",
+        source=tr_id,
+        target=pl_id))
+    page.append(ET.Element('arc',
+        id=f"{pl_id}_to_{target_id}",
+        source=pl_id,
+        target=target_id))
+
+    # --- 5. add new nodes to page --------------------------------------------
+    page.extend([new_tr, new_pl])
+
+    # --- 6. remove gateway *and* its dangling arcs ---------------------------
+    for arc in list(page.findall('arc')):
+        if arc.get('source') == gateway_id or arc.get('target') == gateway_id:
+            page.remove(arc)
+    page.remove(gw)
+
+    tree.write(output_path, encoding='utf-8', xml_declaration=True)
