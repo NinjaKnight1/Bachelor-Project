@@ -67,16 +67,30 @@ async def convert_bpmn(
 
         json_path = "petri_nets/diagramDecisions.json"  # Path to the DMN JSON file
 
-        # Determine the execution order of the PNML file
+
+                # Determine the execution order of the PNML file
         businessT_list = business_task_list_json(bpmn_path, json_path)
-        print("BusinessTask List and Number:", businessT_list)
-   
-        for activity in businessT_list:
-            # Activity is a tuple ((task_id, [(pre, post), ...]),...)
+        XorGateway_list = _Xor_gatewayRules(json_path)
+
+        for activity in XorGateway_list:
+            # Activity is a tuple (task_id, [(pre, target), ...])
             task_id, rules = activity
 
             print(f"Splitting element with ID: {task_id} into {len(rules)} elements.")
 
+            split_gateway(
+                pnml_path=pnml_file_path,    # Path to the PNML file
+                element_id=task_id,          # The ID of the transition to split
+                rules=rules,                 # Rules for the task
+                output_path=pnml_file_path   # Output file path
+            )
+        print("Xor Gateway split successfully.")
+
+
+        for activity in businessT_list:
+            # Activity is a tuple ((task_id, [(pre, post), ...]),...)
+            task_id, rules = activity
+            
             split_pnml_element(
                 pnml_path=pnml_file_path,    # Path to the PNML file
                 element_id=task_id,          # The ID of the transition to split
@@ -85,20 +99,6 @@ async def convert_bpmn(
             )
             
         print("PNML file modified successfully.")
-
-        XorGateway_list = _Xor_gatewayRules(bpmn_path, json_path)
-        for source_id, rules in XorGateway_list:
-            for rule, (_, target_id) in rules:        # _ is the duplicate source id
-                split_gateway(
-                    pnml_path=pnml_file_path,
-                    gateway_id=source_id,
-                    decision_rule=rule,
-                    source_id=source_id,
-                    target_id=target_id,
-                    output_path=pnml_file_path
-                )
-
-        print("Xor Gateway split successfully.")
 
         # Read the modified PNML file
         modified_petri_net, im, fm = pm4py.read_pnml(pnml_file_path)

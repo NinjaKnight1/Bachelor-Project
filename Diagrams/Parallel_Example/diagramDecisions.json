@@ -1,1 +1,85 @@
-{"meta":null,"bpmn":[],"dmn":[{"tableId":"Activity_12h1ym2","hitPolicy":"UNIQUE","inputs":[{"expression":"Num"}],"outputs":[{"expression":"Confirm"}],"rules":[{"row":0,"pre":"(> Num 3)","post":"(= Confirm true)"},{"row":1,"pre":"(<= Num 3)","post":"(= Confirm false)"}]},{"tableId":"Activity_0k5pz63","hitPolicy":"FIRST","inputs":[{"expression":"Weather"}],"outputs":[{"expression":"Clothing"}],"rules":[{"row":0,"pre":"(= Weather \"Cold\")","post":"(= Clothing \"Winter Jacket\")"},{"row":1,"pre":"(and (not (= Weather \"Cold\")) (= Weather \"Warm\"))","post":"(= Clothing \"T-Shirt\")"},{"row":2,"pre":"(and (not (or (= Weather \"Cold\") (= Weather \"Warm\"))) true)","post":"(= Clothing \"Light Jacket\")"}]}],"variableName":[{"name":"Num","value":"3","type":"number"},{"name":"Confirm","value":"3","type":"number"},{"name":"Weather","value":"3","type":"number"},{"name":"Clothing","value":"3","type":"number"}]}
+{
+    "meta": null,
+    "bpmn": [],
+    "dmn": [
+        {
+            "tableId": "Activity_12h1ym2",
+            "hitPolicy": "UNIQUE",
+            "inputs": [
+                {
+                    "expression": "Num"
+                }
+            ],
+            "outputs": [
+                {
+                    "expression": "Confirm"
+                }
+            ],
+            "rules": [
+                {
+                    "row": 0,
+                    "pre": "(> Num 3)",
+                    "post": "(= Confirm true)"
+                },
+                {
+                    "row": 1,
+                    "pre": "(<= Num 3)",
+                    "post": "(= Confirm false)"
+                }
+            ]
+        },
+        {
+            "tableId": "Activity_0k5pz63",
+            "hitPolicy": "FIRST",
+            "inputs": [
+                {
+                    "expression": "Weather"
+                }
+            ],
+            "outputs": [
+                {
+                    "expression": "Clothing"
+                }
+            ],
+            "rules": [
+                {
+                    "row": 0,
+                    "pre": "(= Weather \"Cold\")",
+                    "post": "(= Clothing \"Winter Jacket\")"
+                },
+                {
+                    "row": 1,
+                    "pre": "(and (not (= Weather \"Cold\")) (= Weather \"Warm\"))",
+                    "post": "(= Clothing \"T-Shirt\")"
+                },
+                {
+                    "row": 2,
+                    "pre": "(and (not (or (= Weather \"Cold\") (= Weather \"Warm\"))) true)",
+                    "post": "(= Clothing \"Light Jacket\")"
+                }
+            ]
+        }
+    ],
+    "variableName": [
+        {
+            "name": "Num",
+            "value": "3",
+            "type": "number"
+        },
+        {
+            "name": "Confirm",
+            "value": "3",
+            "type": "number"
+        },
+        {
+            "name": "Weather",
+            "value": "3",
+            "type": "number"
+        },
+        {
+            "name": "Clothing",
+            "value": "3",
+            "type": "number"
+        }
+    ]
+}

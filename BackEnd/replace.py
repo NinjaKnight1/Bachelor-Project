@@ -20,6 +20,12 @@ def _attach_guard(
         text_el.text = guard_expr
 
 
+def createArc(source, target, arc_id, page):
+    arc = ET.Element("arc")
+    arc.set("id", arc_id)
+    arc.set("source", source)
+    arc.set("target", target)
+    page.append(arc)
 
 
 def split_pnml_element(
@@ -101,59 +107,75 @@ def split_pnml_element(
     tree.write(output_path, encoding='utf-8', xml_declaration=True)
 
 def split_gateway(
-        pnml_path: str,
-        gateway_id: str,
-        decision_rule: str,
-        source_id: str,
-        target_id: str,
-        output_path: str
+    pnml_path: str,
+    element_id: str,
+    rules: list,
+    output_path: str
 ):
+    #read the PNML file
     tree = ET.parse(pnml_path)
-    page = tree.find('./net/page')
+    root = tree.getroot()
+    net = root.find('net')
+    page = net.find('page')
     if page is None:
         raise ValueError("No <page> element found in PNML file.")
+    # Find the gateway element by existing element ID
+    gateway = page.find(f".//*[@id='exi_{element_id}']")
 
-    gw = page.find(f".//*[@id='{gateway_id}']")
-    if gw is None:
-        raise ValueError(f"Gateway with id '{gateway_id}' not found.")
-
-    # --- 1. build safe IDs ----------------------------------------------------
-    safe = re.sub(r'[^A-Za-z0-9_]', '_', decision_rule)
-    tr_id = f"{gateway_id}_{safe}_tr"
-    pl_id = f"{gateway_id}_{safe}_pl"
-
-    # --- 2. create transition -------------------------------------------------
-    new_tr = ET.Element('transition', id=tr_id)
-    name_tr = ET.SubElement(new_tr, 'name')
-    ET.SubElement(name_tr, 'text').text = tr_id
-    _attach_guard(new_tr, decision_rule)      # helper in replace.py :contentReference[oaicite:0]{index=0}
-
-    # --- 3. create place ------------------------------------------------------
-    new_pl = ET.Element('place', id=pl_id)
-    name_pl = ET.SubElement(new_pl, 'name')
-    ET.SubElement(name_pl, 'text').text = pl_id
-
-    # --- 4. create legal arcs -------------------------------------------------
-    page.append(ET.Element('arc',
-        id=f"{source_id}_to_{tr_id}",
-        source=source_id,
-        target=tr_id))
-    page.append(ET.Element('arc',
-        id=f"{tr_id}_to_{pl_id}",
-        source=tr_id,
-        target=pl_id))
-    page.append(ET.Element('arc',
-        id=f"{pl_id}_to_{target_id}",
-        source=pl_id,
-        target=target_id))
-
-    # --- 5. add new nodes to page --------------------------------------------
-    page.extend([new_tr, new_pl])
-
-    # --- 6. remove gateway *and* its dangling arcs ---------------------------
+    if gateway is None:
+        raise ValueError(f"Gateway with id='exi_{element_id}' not found.")
+    
+    #Find arc which connects the gateway to the source
+    source = None
+    arcs = page.findall('arc')
+    for arc in arcs:
+        if arc.get('target') == f'exi_{element_id}':
+            source = arc.get('source')
+            break
+    if source is None:
+        raise ValueError(f"No arc found connecting to gateway with id='exi_{element_id}'.")
+    
+    #remove all outgoing arcs from the gateway
     for arc in list(page.findall('arc')):
-        if arc.get('source') == gateway_id or arc.get('target') == gateway_id:
+        if arc.get('source') == f'exi_{element_id}':
             page.remove(arc)
-    page.remove(gw)
+    
 
-    tree.write(output_path, encoding='utf-8', xml_declaration=True)
+    for rule, target in rules:
+
+        #Create new transition element (not a deepcopy, but a new element)
+        new_transition = ET.Element("transition")
+        new_transition.set("id", f"exi_{element_id}_{rule}")
+        new_transition.set("name", f"Xor: {rule}")
+
+        # Set the guard expression
+        guard_input = f"PRE: {rule} \n POST: true"
+        _attach_guard(new_transition, guard_input)
+
+        # Add the new transition to the page
+        page.append(new_transition)
+
+        #Create arch from the gateway -> new transition
+        createArc(f"exi_{element_id}", f"exi_{element_id}_{rule}", f"arc_{element_id}_{rule}", page)
+
+        # Create new arcs for the gateway
+        createArc(source, f"exi_{element_id}_{rule}", f"arc_{element_id}_{rule}", page)
+
+        # Create place which goes new transition -> target
+        new_place = ET.Element("place")
+        new_place.set("id", f"place_{element_id}_{rule}")
+        new_place.set("name", f"Place_{element_id}_{rule}")
+        page.append(new_place)
+
+        # Create arc from new transition to new place
+        createArc(f"exi_{element_id}_{rule}", f"place_{element_id}_{rule}", f"arc_{element_id}_{rule}_to_place", page)
+
+        # Create arc from new place to target
+        createArc(f"place_{element_id}_{rule}", target, f"arc_{element_id}_{rule}_to_target", page)
+
+
+    ET.indent(tree, space="  ", level=0)     # 2-space indent; tweak as you like
+    tree.write(output_path,
+           encoding='utf-8',
+           xml_declaration=True,
+           short_empty_elements=False)   # expands <arc … /> → <arc …></arc> 
