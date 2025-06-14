@@ -117,7 +117,6 @@ async def convert_bpmn(
         "image_url": f"{diagram_path}"
         }
 
-    
 
     except Exception as e:
         return {"error": str(e)}
