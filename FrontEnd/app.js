@@ -139,8 +139,8 @@ async function handleDownload() {
     const { xml: bpmnXml } = await bpmnModeler.saveXML({ format: true });
     const { xml: dmnXml } = await dmnModeler.saveXML({ format: true });
 
-    download("Business Process Diagram.bpmn", bpmnXml);
-    download("Decision Tables.dmn", dmnXml);
+    downloadXML("Business Process Diagram.bpmn", bpmnXml);
+    downloadXML("Decision Tables.dmn", dmnXml);
 
 
   } catch (error) {
@@ -175,9 +175,9 @@ async function handleModelChange(htmlElement) {
   }
 }
 
-function download(fileName, xml) {
+function downloadXML(fileName, xml) {
   const blob = new Blob([xml], { type: 'application/xml' });
-  const url = URL.createObjectURL(blob);
+  url = URL.createObjectURL(blob);
 
   const elementA = document.createElement('a')
   elementA.href = url;
@@ -185,9 +185,30 @@ function download(fileName, xml) {
 
   // download the file
   elementA.click();
+  elementA.remove();
 
   URL.revokeObjectURL(url);
 }
+
+async function downloadURL(fileName, url) {
+  const resp = await fetch(url);
+  if (!resp.ok) {
+    console.error("download failed", resp.statusText);
+    return;
+  }
+  const blob    = await resp.blob();
+  const blobURL = URL.createObjectURL(blob);
+  const elementA = document.createElement('a')
+  elementA.href = blobURL;
+  elementA.download = fileName;
+
+  // download the file
+  elementA.click();
+  elementA.remove();
+
+  URL.revokeObjectURL(url);
+}
+
 
 // Function to convert BPMN to Petri Net
 async function convertBPMNToPetriNet(file) {
@@ -281,6 +302,11 @@ async function exportAndConvert() {
     }
 
     const data = await response.json();
+    let pnmlUrl = "http://localhost:8081" + data.pnml_url;
+    let pngUrl = "http://localhost:8081" + data.image_url;
+    // document.getElementById("petri-img").src = `http://localhost:8081${png_url}`;
+    await downloadURL("diagram.pnml", pnmlUrl);
+    await downloadURL("DPNImage.png", pngUrl);
     console.log("Conversion successful:", data);
     alert("BPMN and DMN successfully converted and saved!");
   } catch (error) {

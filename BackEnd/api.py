@@ -7,6 +7,11 @@ from pm4py.visualization.petri_net import visualizer as pn_vis_factory
 from replace import split_pnml_element, split_gateway
 from json_mani import business_task_list_json, _Xor_gatewayRules
 
+from pathlib import Path
+from fastapi.staticfiles import StaticFiles
+
+
+
 app = FastAPI()
 
 # Enable CORS
@@ -21,6 +26,7 @@ app.add_middleware(
 # Ensure the 'petri_nets' directory exists
 PETRI_NETS_DIR = "petri_nets"
 os.makedirs(PETRI_NETS_DIR, exist_ok=True)
+app.mount("/files", StaticFiles(directory=PETRI_NETS_DIR), name="files")
 
 @app.post("/convert/")
 async def convert_bpmn(
@@ -106,15 +112,17 @@ async def convert_bpmn(
         # Convert the Petri Net to a DiGraph
         # Visualize the Petri Net and save the diagram
         gviz = pn_vis_factory.apply(modified_petri_net, im, fm)
-        diagram_path = pnml_file_path.replace(".pnml", ".png")
+        base, _ = os.path.splitext(pnml_file_path) 
+        diagram_path = base + ".png"
         pn_vis_factory.save(gviz, diagram_path)
 
             
         return {
-        "message": "Conversion successful!", "file_path": bpmn_path,
+        "message": "Conversion successful!", 
+        # "file_path": bpmn_path,
         # relative URLs that the front-end can fetch
-        "pnml_url":  f"{pnml_file_path}",
-        "image_url": f"{diagram_path}"
+        "pnml_url":  f"/files/{Path(pnml_file_path).name}",
+        "image_url": f"/files/{Path(diagram_path).name}"
         }
 
 
