@@ -177,7 +177,7 @@ async function handleModelChange(htmlElement) {
 
 function downloadXML(fileName, xml) {
   const blob = new Blob([xml], { type: 'application/xml' });
-  url = URL.createObjectURL(blob);
+  let url = URL.createObjectURL(blob);
 
   const elementA = document.createElement('a')
   elementA.href = url;
