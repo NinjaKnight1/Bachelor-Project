@@ -109,7 +109,14 @@ async def convert_bpmn(
         diagram_path = pnml_file_path.replace(".pnml", ".png")
         pn_vis_factory.save(gviz, diagram_path)
 
-        return {"message": "Conversion successful!", "file_path": bpmn_path}
+            
+        return {
+        "message": "Conversion successful!", "file_path": bpmn_path,
+        # relative URLs that the front-end can fetch
+        "pnml_url":  f"{pnml_file_path}",
+        "image_url": f"{diagram_path}"
+        }
+
     
 
     except Exception as e:

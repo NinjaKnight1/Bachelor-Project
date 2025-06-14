@@ -2,8 +2,6 @@ import json
 import xml.etree.ElementTree as ET
 import re
 from typing import List, Tuple
-
-
 from collections import defaultdict
 
 def merge_gateway_rules(items):
