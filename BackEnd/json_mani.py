@@ -2,8 +2,6 @@ import json
 import xml.etree.ElementTree as ET
 import re
 from typing import List, Tuple
-
-
 from collections import defaultdict
 
 def merge_gateway_rules(items):
@@ -120,9 +118,3 @@ def _Xor_gatewayRules(dmn_json_path: str):
     result = merge_gateway_rules(result)
     print("Xor Gateway Rules:", result)
     return result
-
-
-if __name__ == "__main__":
-    dmn_json_path = "petri_nets/diagramDecisions.json"
-    X_or = _Xor_gatewayRules(dmn_json_path)
-    print("X_or List:", X_or)
