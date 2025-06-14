@@ -68,7 +68,7 @@ async def convert_bpmn(
         json_path = "petri_nets/diagramDecisions.json"  # Path to the DMN JSON file
 
 
-                # Determine the execution order of the PNML file
+        # Determine the execution order of the PNML file
         businessT_list = business_task_list_json(bpmn_path, json_path)
         XorGateway_list = _Xor_gatewayRules(json_path)
 
