@@ -10,8 +10,8 @@ import DmnModdle from 'dmn-moddle';
 import { is } from 'bpmn-js/lib/util/ModelUtil'; // Utility to check element type
 
 // BPMN and DMN diagram XML files
-import bpmnDiagramXML from '../petri_nets/diagram.bpmn';
-import dmnDiagramXML from '../petri_nets/decision-table.dmn';
+import bpmnDiagramXML from '/resources/defaultBpmnDiagram.bpmn';
+import dmnDiagramXML from '/resources/defaultDmnDiagram.dmn';
 import './CSS/style.css';
 import CustomPaletteProvider from './bpmn/customPaletteProvider.js';
 import { jsonFromBpmnAndDmn } from './translationOfFeel.ts';
@@ -24,6 +24,22 @@ let activeTaskId = null;
 
 let bpmnModeler;
 export let dmnModeler;
+
+const models = {
+  default: {
+    bpmn: '/resources/defaultBpmnDiagram.bpmn',
+    dmn: '/resources/defaultDmnDiagram.dmn',
+  },
+  takeaway: {
+    bpmn: '/Diagrams/Report_Example/diagram.bpmn',
+    dmn: '/Diagrams/Report_Example/decision-table.dmn',
+  },
+  parallel: {
+    bpmn: '/Diagrams/Parallel_Example/diagram.bpmn',
+    dmn: '/Diagrams/Parallel_Example/decision-table.dmn',
+  }
+}
+
 
 async function init() {
 
@@ -57,6 +73,8 @@ async function init() {
   document.getElementById('import-bpmn').addEventListener("change", handleFileUpload);
   document.getElementById('import-dmn').addEventListener("change", handleFileUpload);
   document.getElementById('download-button').addEventListener("click", handleDownload);
+
+  document.getElementById('select-model').addEventListener('change', handleModelChange);
 
   // on DMN div
   document.getElementById("dmn-back-button").addEventListener("click", () => goBackToBpmn(dmnModeler));
@@ -128,7 +146,33 @@ async function handleDownload() {
   } catch (error) {
     console.error(error);
     alert("Failed to download diagram, try again");
-  } 
+  }
+}
+
+async function handleModelChange(htmlElement) {
+  const key = htmlElement.target.value;
+
+  // There haven't been picked any model version
+  if (!key) {
+    return;
+  }
+  const { bpmn, dmn } = models[key];
+  try {
+
+    const [bpmnXml, dmnXml] = await Promise.all([
+      fetch(bpmn).then(r => r.text()),
+      fetch(dmn).then(r => r.text())
+    ]);
+
+    await openDiagramBPMN(bpmnXml);
+    await openDiagramDMN(dmnXml);
+
+  } catch (error) {
+    console.error(error);
+    alert("Failed to load model, try again");
+  } finally {
+    htmlElement.target.value = '';
+  }
 }
 
 function download(fileName, xml) {
@@ -144,8 +188,6 @@ function download(fileName, xml) {
 
   URL.revokeObjectURL(url);
 }
-
-
 
 // Function to convert BPMN to Petri Net
 async function convertBPMNToPetriNet(file) {
@@ -267,64 +309,5 @@ export async function goBackToBpmn() {
   }
 }
 
-function showVariableModal(variableNames) {
-  return new Promise(resolve => {
-    const modal = document.getElementById('variable-modal');
-    const rowsParent = document.getElementById('variable-rows');
-    const form = document.getElementById('variable-form');
-    const cancelBtn = document.getElementById('modal-cancel');
-    const closeBtn = document.getElementById('modal-close');
-
-    // build rows
-    rowsParent.innerHTML = '';
-    variableNames.forEach(name => {
-      const row = document.createElement('div');
-      row.className = 'variable-row';
-      row.innerHTML = `
-        <label>${name}</label>
-        <select class="var-type">
-          <option value="string">string</option>
-          <option value="number">number</option>
-          <option value="boolean">boolean</option>
-        </select>
-        <input class="var-value" placeholder="Value"/>
-      `;
-      rowsParent.appendChild(row);
-    });
-
-    // handlers
-    const hide = res => { modal.style.display = 'none'; resolve(res); };
-
-    cancelBtn.onclick = () => hide(null);
-    closeBtn.onclick = () => hide(null);
-
-    form.onsubmit = e => {
-      e.preventDefault();
-      let valid = true, variables = [];
-
-      rowsParent.querySelectorAll('.variable-row').forEach(row => {
-        const name = row.querySelector('label').textContent;
-        const type = row.querySelector('.var-type').value;
-        const input = row.querySelector('.var-value');
-        const value = input.value.trim();
-        input.classList.remove('error');
-
-        if (!value) {
-          valid = false;
-          input.classList.add('error');
-        }
-        variables.push({ name, type, value });
-      });
-
-      if (!valid) {
-        alert('Please fill in every value.');
-        return;             // stay open
-      }
-      hide(variables);      // continue
-    };
-
-    modal.style.display = 'flex';
-  });
-}
 
 init();

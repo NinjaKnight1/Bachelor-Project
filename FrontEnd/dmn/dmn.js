@@ -11,7 +11,7 @@ export async function OLDopenTableFromTaskID(dmnModeler, decisionId) {
 
     // 1) See if the DMN file has a <decision id="Task_1"> already
     // await openDiagramDMN(dmnDiagramXML);
-    dmnModeler.on('views.changed', function(event) {
+    dmnModeler.on('views.changed', function (event) {
         console.log("Views changed event:", event);
     });
     // 3) Switch the UI from BPMN view to DMN view
@@ -26,7 +26,7 @@ export async function OLDopenTableFromTaskID(dmnModeler, decisionId) {
     console.log("activeViewer getmodules", activeViewer.getModules());
     const viewdrd = activeViewer.get('viewDrd');
     console.log("viewdrd", viewdrd);
-    
+
     if (!activeViewer) {
         console.error("No active viewer found.");
         return;
@@ -44,7 +44,7 @@ export async function OLDopenTableFromTaskID(dmnModeler, decisionId) {
         let newView = findDecisionView(decisionId);
         if (newView) {
             console.log("New decision created:", newView);
-            dmnModeler.open(newView);            
+            dmnModeler.open(newView);
         } else {
             console.error("Failed to create new decision:", decisionId);
             return;
@@ -76,7 +76,7 @@ export async function openTableFromTaskID(dmnModeler, decisionId, dmnDicisionTab
         if (newView) {
             console.log("New decision created:", newView);
             // Open the new decision view, which is a decision table
-            dmnModeler.open(newView);            
+            dmnModeler.open(newView);
         } else {
             console.error("Failed to create new decision:", decisionId);
             return;
@@ -110,12 +110,12 @@ function createNewDecision(decisionId, dmnDicisionTableName) {
         id: decisionId,
         name: dmnDicisionTableName,
     });
-    
+
     const newDecisionTable = dmnModdle.create('dmn:DecisionTable', {
         id: `${decisionId}_decisionTable`,
         hitPolicy: 'UNIQUE'
     });
-    
+
     const inputClause = dmnModdle.create('dmn:InputClause', {
         id: `${decisionId}_inputClause`
     });
@@ -135,9 +135,9 @@ function createNewDecision(decisionId, dmnDicisionTableName) {
 
     newDecisionTable.input = [inputClause];
     newDecisionTable.output = [outputClause];
-    
+
     newDecisionTable.$parent = newDecision;
-    inputClause.$parent = newDecisionTable; 
+    inputClause.$parent = newDecisionTable;
     outputClause.$parent = newDecisionTable;
     inputExpression.$parent = inputClause;
     newDecision.$parent = definitions;
@@ -146,7 +146,7 @@ function createNewDecision(decisionId, dmnDicisionTableName) {
     definitions.drgElement.push(newDecision);
 
     dmnModeler._setDefinitions(definitions);
-    
+
 }
 
 function evaluateDecision() {
@@ -155,7 +155,7 @@ function evaluateDecision() {
     const decision = viewer.getDecision(); // get the current decision
 
     viewer.getDecisionService().evaluate(decision.id, {
-        'yourInputVariableName': inputValue  // Replace with the actual input expression text
+        'yourInputVariableName': inputValue
     }).then(result => {
         console.log("Evaluation result:", result);
     }).catch(err => {
@@ -163,5 +163,4 @@ function evaluateDecision() {
     });
 }
 
-// Attach the function to the global window object
 window.evaluateDecision = evaluateDecision;

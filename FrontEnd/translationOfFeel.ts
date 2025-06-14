@@ -342,7 +342,6 @@ function translateFeelToSmtLib(expression: string, parseType: ParseType, headerE
   switch (parseType) {
     case ParseType.Unary:
       tree = parseUnaryTests(expression);
-      console.log(tree.toString(),expression);
       smtLib = walkTreeUnary(tree.cursor(), expression, headerExpression, variableNameSet);
       break;
     case ParseType.Expression:

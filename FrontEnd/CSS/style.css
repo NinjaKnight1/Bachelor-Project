@@ -11,7 +11,7 @@
   background: #4b6e83;
   color: #fff;
   cursor: pointer;
-  font-family:Arial, Helvetica, sans-serif;
+  font-family: Arial, Helvetica, sans-serif;
   user-select: none;
   border: none;
   font-size: medium;
@@ -25,14 +25,17 @@
   background: #526f8d;
 
 }
+
 .button-upload:hover {
   background: #042346;
 }
+select.button-upload option:disabled { color:#d8d8d8; } 
 
 .button-download {
   background: #52898d;
-  
+
 }
+
 .button-download:hover {
   background: #044246;
 }
@@ -98,4 +101,3 @@
   justify-content: flex-end;
   gap: 1rem;
 }
-
