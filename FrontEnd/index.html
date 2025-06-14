@@ -7,13 +7,23 @@
 
 <body>
   <div id="bpmn-container">
+
     <div class="canvas" id="bpmn-canvas"></div>
-    <button id="export-button">Export and Convert</button>
+
+    <button id="export-button" class="button button-export">Export and Convert</button>
+
+    <input id="import-bpmn" type="file" accept=".bpmn" hidden>
+    <label class="button button-upload" for="import-bpmn">Upload BPMN</label>
+
+    <input id="import-dmn" type="file" accept=".dmn" hidden />
+    <label class="button button-upload" for="import-dmn">Upload DMN</label>
+
+    <button id="download-button" class="button button-download">Download BPMN and DMN</button>
   </div>
 
   <div id="dmn-container" style="display: none;">
     <div class="canvas" id="dmn-canvas"></div>
-    <button id="dmn-back-button">Back to BPMN</button>
+    <button class="button" id="dmn-back-button">Back to BPMN</button>
   </div>
 
   <script src="app.js"></script>

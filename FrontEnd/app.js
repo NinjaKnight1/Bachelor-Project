@@ -51,7 +51,14 @@ async function init() {
   rightClickOnBPMN();
 
   // Add event listener to the button
+  // on BPMN div
   document.getElementById("export-button").addEventListener("click", exportAndConvert);
+
+  document.getElementById('import-bpmn').addEventListener("change", handleFileUpload);
+  document.getElementById('import-dmn').addEventListener("change", handleFileUpload);
+  document.getElementById('download-button').addEventListener("click", handleDownload);
+
+  // on DMN div
   document.getElementById("dmn-back-button").addEventListener("click", () => goBackToBpmn(dmnModeler));
 }
 
@@ -72,6 +79,72 @@ async function openDiagramBPMN(xml) {
     console.error('Error loading BPMN diagram:', err);
   }
 }
+
+// Handles the import of files and changes the diagram for dmn or bpmn to the uploaded file
+async function handleFileUpload(htmlElement) {
+  const file = htmlElement.target.files[0];
+  // if the user have not uploaded a file
+  if (!file) {
+    return;
+  }
+
+  try {
+    let extension = file.name.substring(file.name.lastIndexOf('.') + 1, file.name.length) || undefined;
+
+    const xml = await file.text();
+
+    switch (extension) {
+      case 'bpmn':
+        await openDiagramBPMN(xml);
+        break;
+
+      case 'dmn':
+        await openDiagramDMN(xml);
+        break;
+
+      default:
+        // This shouldn't be able to happen as there are type checks in <input>
+        alert("The file type ." + extension + " is not supportet");
+        break;
+    }
+  } catch (error) {
+    console.error(error);
+    alert("Failed to load diagram, try again");
+  } finally {
+    htmlElement.target.value = '';
+  }
+}
+
+async function handleDownload() {
+  console.log("hej");
+  try {
+    const { xml: bpmnXml } = await bpmnModeler.saveXML({ format: true });
+    const { xml: dmnXml } = await dmnModeler.saveXML({ format: true });
+
+    download("Business Process Diagram.bpmn", bpmnXml);
+    download("Decision Tables.dmn", dmnXml);
+
+
+  } catch (error) {
+    console.error(error);
+    alert("Failed to download diagram, try again");
+  } 
+}
+
+function download(fileName, xml) {
+  const blob = new Blob([xml], { type: 'application/xml' });
+  const url = URL.createObjectURL(blob);
+
+  const elementA = document.createElement('a')
+  elementA.href = url;
+  elementA.download = fileName;
+
+  // download the file
+  elementA.click();
+
+  URL.revokeObjectURL(url);
+}
+
 
 
 // Function to convert BPMN to Petri Net
