@@ -41,9 +41,9 @@
           <text>budget</text>
         </inputExpression>
       </input>
-      <input id="InputClause_015948k" label="Cousine Preference">
+      <input id="InputClause_015948k" label="Cuisine Preference">
         <inputExpression id="LiteralExpression_03flj5u" typeRef="string">
-          <text>cousinePreference</text>
+          <text>cuisinePreference</text>
         </inputExpression>
       </input>
       <output id="Activity_0qgwwu7_outputClause" label="Takeout Option" name="takeoutOption" typeRef="string" />
