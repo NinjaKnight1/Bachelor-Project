@@ -37,6 +37,10 @@ const models = {
   parallel: {
     bpmn: '/Diagrams/Parallel_Example/diagram.bpmn',
     dmn: '/Diagrams/Parallel_Example/decision-table.dmn',
+  },
+  exclusive: {
+    bpmn: '/Diagrams/Exclusive_Example/diagram.bpmn',
+    dmn: '/Diagrams/Exclusive_Example/decision-table.dmn',
   }
 }
 
