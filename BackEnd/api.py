@@ -4,8 +4,13 @@ from fastapi.middleware.cors import CORSMiddleware
 import pm4py
 from pm4py.visualization.petri_net import visualizer as pn_vis_factory
 
-from replace import split_pnml_element
-from json_mani import business_task_list_json
+from replace import split_pnml_element, split_gateway
+from json_mani import business_task_list_json, _Xor_gatewayRules
+
+from pathlib import Path
+from fastapi.staticfiles import StaticFiles
+
+
 
 app = FastAPI()
 
@@ -21,6 +26,7 @@ app.add_middleware(
 # Ensure the 'petri_nets' directory exists
 PETRI_NETS_DIR = "petri_nets"
 os.makedirs(PETRI_NETS_DIR, exist_ok=True)
+app.mount("/files", StaticFiles(directory=PETRI_NETS_DIR), name="files")
 
 @app.post("/convert/")
 async def convert_bpmn(
@@ -67,22 +73,38 @@ async def convert_bpmn(
 
         json_path = "petri_nets/diagramDecisions.json"  # Path to the DMN JSON file
 
+
         # Determine the execution order of the PNML file
         businessT_list = business_task_list_json(bpmn_path, json_path)
-        print("BusinessTask List and Number:", businessT_list)
-   
-        for activity in businessT_list:
-            # Activity is a tuple ((task_id, [(pre, post), ...]),...)
+        XorGateway_list = _Xor_gatewayRules(json_path)
+
+        for activity in XorGateway_list:
+            # Activity is a tuple (task_id, [(pre, target), ...])
             task_id, rules = activity
 
             print(f"Splitting element with ID: {task_id} into {len(rules)} elements.")
 
+            split_gateway(
+                pnml_path=pnml_file_path,    # Path to the PNML file
+                element_id=task_id,          # The ID of the transition to split
+                rules=rules,                 # Rules for the task
+                output_path=pnml_file_path   # Output file path
+            )
+        print("Xor Gateway split successfully.")
+
+
+        for activity in businessT_list:
+            # Activity is a tuple ((task_id, [(pre, post), ...]),...)
+            task_id, rules = activity
+            
             split_pnml_element(
                 pnml_path=pnml_file_path,    # Path to the PNML file
                 element_id=task_id,          # The ID of the transition to split
                 rules=rules,                 # Rules for the task
                 output_path=pnml_file_path   # Output file path
             )
+            
+        print("PNML file modified successfully.")
 
         # Read the modified PNML file
         modified_petri_net, im, fm = pm4py.read_pnml(pnml_file_path)
@@ -90,11 +112,19 @@ async def convert_bpmn(
         # Convert the Petri Net to a DiGraph
         # Visualize the Petri Net and save the diagram
         gviz = pn_vis_factory.apply(modified_petri_net, im, fm)
-        diagram_path = pnml_file_path.replace(".pnml", ".png")
+        base, _ = os.path.splitext(pnml_file_path) 
+        diagram_path = base + ".png"
         pn_vis_factory.save(gviz, diagram_path)
 
-        return {"message": "Conversion successful!", "file_path": bpmn_path}
-    
+            
+        return {
+        "message": "Conversion successful!", 
+        # "file_path": bpmn_path,
+        # relative URLs that the front-end can fetch
+        "pnml_url":  f"/files/{Path(pnml_file_path).name}",
+        "image_url": f"/files/{Path(diagram_path).name}"
+        }
+
 
     except Exception as e:
         return {"error": str(e)}
@@ -102,3 +132,4 @@ async def convert_bpmn(
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(app, host="0.0.0.0", port=8081)
+    

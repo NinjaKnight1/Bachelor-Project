@@ -1,0 +1,116 @@
+<?xml version='1.0' encoding='utf-8'?>
+<pnml>
+  <net id="" type="http://www.pnml.org/version-2009/grammar/pnmlcoremodel">
+    <name>
+      <text />
+    </name>
+    <page id="n0">
+      <place id="ent_Gateway_0axhi62">
+        <name>
+          <text>ent_Gateway_0axhi62</text>
+        </name>
+      </place>
+      <place id="sink">
+        <name>
+          <text>sink</text>
+        </name>
+      </place>
+      <place id="exi_Gateway_11kp0ya">
+        <name>
+          <text>exi_Gateway_11kp0ya</text>
+        </name>
+      </place>
+      <place id="source">
+        <name>
+          <text>source</text>
+        </name>
+        <initialMarking>
+          <text>1</text>
+        </initialMarking>
+      </place>
+      <transition id="fc5c06cc-84c3-4dca-9dd0-34bb137302cf">
+        <name>
+          <text>fc5c06cc-84c3-4dca-9dd0-34bb137302cf</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="b62d867b-c78d-4a18-9af8-d91e532e3d38" />
+      </transition>
+      <transition id="Gateway_0axhi62">
+        <name>
+          <text>Gateway_0axhi62</text>
+        </name>
+        <toolspecific tool="ProM" version="6.4" activity="$invisible$" localNodeID="7d813dd3-7fc8-4316-855b-9afda73b60c2" />
+      </transition>
+      <arc id="1925230101264" source="source" target="fc5c06cc-84c3-4dca-9dd0-34bb137302cf" />
+      <arc id="1925230102992" source="ent_Gateway_0axhi62" target="Gateway_0axhi62" />
+      <arc id="1925230156368" source="Gateway_0axhi62" target="sink" />
+      <arc id="1925230155856" source="fc5c06cc-84c3-4dca-9dd0-34bb137302cf" target="exi_Gateway_11kp0ya" />
+      <transition id="exi_Gateway_11kp0ya_(&gt; y 0)" name="Xor: (&gt; y 0)" guard="PRE: (&amp;gt; y 0) &#10; POST: true">
+        <guard>
+          <text>PRE: (&gt; y 0) 
+ POST: true</text>
+        </guard>
+      </transition>
+      <arc id="arc_Gateway_11kp0ya_(&gt; y 0)" source="exi_Gateway_11kp0ya" target="exi_Gateway_11kp0ya_(&gt; y 0)" />
+      <arc id="arc_Gateway_11kp0ya_(&gt; y 0)" source="fc5c06cc-84c3-4dca-9dd0-34bb137302cf" target="exi_Gateway_11kp0ya_(&gt; y 0)" />
+      <place id="place_Gateway_11kp0ya_(&gt; y 0)" name="Place_Gateway_11kp0ya_(&gt; y 0)" />
+      <arc id="arc_Gateway_11kp0ya_(&gt; y 0)_to_place" source="exi_Gateway_11kp0ya_(&gt; y 0)" target="place_Gateway_11kp0ya_(&gt; y 0)" />
+      <transition id="exi_Gateway_11kp0ya_(&lt;= y 0)" name="Xor: (&lt;= y 0)" guard="PRE: (&amp;lt;= y 0) &#10; POST: true">
+        <guard>
+          <text>PRE: (&lt;= y 0) 
+ POST: true</text>
+        </guard>
+      </transition>
+      <arc id="arc_Gateway_11kp0ya_(&lt;= y 0)" source="exi_Gateway_11kp0ya" target="exi_Gateway_11kp0ya_(&lt;= y 0)" />
+      <arc id="arc_Gateway_11kp0ya_(&lt;= y 0)" source="fc5c06cc-84c3-4dca-9dd0-34bb137302cf" target="exi_Gateway_11kp0ya_(&lt;= y 0)" />
+      <place id="place_Gateway_11kp0ya_(&lt;= y 0)" name="Place_Gateway_11kp0ya_(&lt;= y 0)" />
+      <arc id="arc_Gateway_11kp0ya_(&lt;= y 0)_to_place" source="exi_Gateway_11kp0ya_(&lt;= y 0)" target="place_Gateway_11kp0ya_(&lt;= y 0)" />
+      <transition id="Activity_0k5pz63_1" guard="PRE: (= Weather &amp;quot;Cold&amp;quot;) &#10; POST: (= Clothing' &amp;quot;Winter Jacket&amp;quot;)">
+        <name>
+          <text>First_1</text>
+        </name>
+      <guard><text>PRE: (= Weather "Cold") 
+ POST: (= Clothing' "Winter Jacket")</text></guard></transition>
+      <transition id="Activity_0k5pz63_2" guard="PRE: (and (not (= Weather &amp;quot;Cold&amp;quot;)) (= Weather &amp;quot;Warm&amp;quot;)) &#10; POST: (= Clothing' &amp;quot;T-Shirt&amp;quot;)">
+        <name>
+          <text>First_2</text>
+        </name>
+      <guard><text>PRE: (and (not (= Weather "Cold")) (= Weather "Warm")) 
+ POST: (= Clothing' "T-Shirt")</text></guard></transition>
+      <transition id="Activity_0k5pz63_3" guard="PRE: (and (not (or (= Weather &amp;quot;Cold&amp;quot;) (= Weather &amp;quot;Warm&amp;quot;))) true) &#10; POST: (= Clothing' &amp;quot;Light Jacket&amp;quot;)">
+        <name>
+          <text>First_3</text>
+        </name>
+      <guard><text>PRE: (and (not (or (= Weather "Cold") (= Weather "Warm"))) true) 
+ POST: (= Clothing' "Light Jacket")</text></guard></transition>
+      <arc id="1925230156048_1" source="Activity_0k5pz63_1" target="ent_Gateway_0axhi62" />
+      <arc id="1925230156048_2" source="Activity_0k5pz63_2" target="ent_Gateway_0axhi62" />
+      <arc id="1925230156048_3" source="Activity_0k5pz63_3" target="ent_Gateway_0axhi62" />
+      <arc id="arc_Gateway_11kp0ya_(&lt;= y 0)_to_target_1" source="place_Gateway_11kp0ya_(&lt;= y 0)" target="Activity_0k5pz63_1" />
+    <arc id="arc_Gateway_11kp0ya_(&lt;= y 0)_to_target_2" source="place_Gateway_11kp0ya_(&lt;= y 0)" target="Activity_0k5pz63_2" />
+    <arc id="arc_Gateway_11kp0ya_(&lt;= y 0)_to_target_3" source="place_Gateway_11kp0ya_(&lt;= y 0)" target="Activity_0k5pz63_3" />
+    <transition id="Activity_12h1ym2_1" guard="PRE: (&amp;gt; Num 3) &#10; POST: (= Confirm' true)">
+        <name>
+          <text>Unique_1</text>
+        </name>
+      <guard><text>PRE: (&gt; Num 3) 
+ POST: (= Confirm' true)</text></guard></transition>
+      <transition id="Activity_12h1ym2_2" guard="PRE: (&amp;lt;= Num 3) &#10; POST: (= Confirm' false)">
+        <name>
+          <text>Unique_2</text>
+        </name>
+      <guard><text>PRE: (&lt;= Num 3) 
+ POST: (= Confirm' false)</text></guard></transition>
+      <arc id="1925230156240_1" source="Activity_12h1ym2_1" target="ent_Gateway_0axhi62" />
+      <arc id="1925230156240_2" source="Activity_12h1ym2_2" target="ent_Gateway_0axhi62" />
+      <arc id="arc_Gateway_11kp0ya_(&gt; y 0)_to_target_1" source="place_Gateway_11kp0ya_(&gt; y 0)" target="Activity_12h1ym2_1" />
+      <arc id="arc_Gateway_11kp0ya_(&gt; y 0)_to_target_2" source="place_Gateway_11kp0ya_(&gt; y 0)" target="Activity_12h1ym2_2" />
+      </page>
+    <finalmarkings>
+      <marking>
+        <place idref="sink">
+          <text>1</text>
+        </place>
+      </marking>
+    </finalmarkings>
+  </net>
+</pnml>
