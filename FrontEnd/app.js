@@ -6,7 +6,7 @@ import { openTableFromTaskID } from './dmn/dmn.js';
 
 import BpmnModeler from 'bpmn-js/lib/Modeler';
 import DmnModeler from 'dmn-js/lib/Modeler';
-import DmnModdle from 'dmn-moddle';
+import { DmnModdle } from 'dmn-moddle';
 import { is } from 'bpmn-js/lib/util/ModelUtil'; // Utility to check element type
 
 // BPMN and DMN diagram XML files

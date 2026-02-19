@@ -27,11 +27,11 @@ module.exports = {
       },
       {
         test: /\.bpmn$/,
-        use: 'asset/source'
+        type: 'asset/source'
       },
       {
         test: /\.dmn$/,
-        use: 'asset/source'
+        type: 'asset/source'
       }
     ]
   },
