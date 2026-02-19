@@ -27,11 +27,11 @@ module.exports = {
       },
       {
         test: /\.bpmn$/,
-        use: 'raw-loader'
+        use: 'asset/source'
       },
       {
         test: /\.dmn$/,
-        use: 'raw-loader'
+        use: 'asset/source'
       }
     ]
   },

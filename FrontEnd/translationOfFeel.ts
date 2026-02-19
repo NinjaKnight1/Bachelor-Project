@@ -191,7 +191,7 @@ export function guardsFromDmnmodeler(dmnModeler: any): [Array<DecisionTable>, Se
         }
 
         for (let rowNumber = 0; rowNumber < rules.length; rowNumber++) {
-          let rulesRow = rules.at(rowNumber);
+          let rulesRow = rules[rowNumber];
           let inputRow = [];
           let outputRow = [];
 
@@ -200,9 +200,9 @@ export function guardsFromDmnmodeler(dmnModeler: any): [Array<DecisionTable>, Se
           const outputEntry = rulesRow.outputEntry;
 
           for (let inputColumn = 0; inputColumn < inputEntry.length; inputColumn++) {
-            const inputText = inputEntry.at(inputColumn).text;
+            const inputText = inputEntry[inputColumn].text;
 
-            const [translatedText, inputVariableNames] = translateFeelToSmtLib(inputText, ParseType.Unary, inputHeader.at(inputColumn)?.expression);
+            const [translatedText, inputVariableNames] = translateFeelToSmtLib(inputText, ParseType.Unary, inputHeader[inputColumn]?.expression);
             inputVariableNames.forEach(name => variableNameSet.add(name));
             inputRow.push(translatedText);
           }
@@ -231,8 +231,8 @@ export function guardsFromDmnmodeler(dmnModeler: any): [Array<DecisionTable>, Se
 
           allInputRows.push(inputRowRule);
           for (let outputColumn = 0; outputColumn < outputEntry.length; outputColumn++) {
-            const outputText = outputEntry.at(outputColumn).text;
-            const [translatedText, inputVariableNames] = translateFeelToSmtLib(outputText, ParseType.Unary, outputHeader.at(outputColumn)?.expression);
+            const outputText = outputEntry[outputColumn].text;
+            const [translatedText, inputVariableNames] = translateFeelToSmtLib(outputText, ParseType.Unary, outputHeader[outputColumn]?.expression);
             inputVariableNames.forEach(name => variableNameSet.add(name));
             outputRow.push(translatedText);
           }
@@ -278,11 +278,11 @@ function translateFeelToSmtLib(expression: string, parseType: ParseType, headerE
   let smtLib: string;
   switch (parseType) {
     case ParseType.Unary:
-      tree = parseUnaryTests(expression);
+      tree = parseUnaryTests(expression, {},undefined);
       smtLib = walkTreeUnary(tree.cursor(), expression, headerExpression, variableNameSet);
       break;
     case ParseType.Expression:
-      tree = parseExpression(expression);
+      tree = parseExpression(expression, {},undefined);
       smtLib = walkTree(tree.cursor(), expression, variableNameSet);
       break;
   }
