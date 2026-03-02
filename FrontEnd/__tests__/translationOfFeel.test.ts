@@ -21,35 +21,39 @@ describe('translationOfFeel – Unary tests', () => {
     });
   });
 
-  // --------- a single value ---------
-  it('handles strings', () => {
-    let [translatedExpression, variableNameList] = translateFeelToSmtLib('"A"', ParseType.Unary, 'x');
-    expect(translatedExpression).toBe('(= x "A")');
+  describe('Single values', () => {
+
+    // --------- a single value ---------
+    it('handles strings', () => {
+      let [translatedExpression, variableNameList] = translateFeelToSmtLib('"A"', ParseType.Unary, 'x');
+      expect(translatedExpression).toBe('(= x "A")');
+    });
+
+    it('handles numbers', () => {
+      let [translatedExpression, variableNameList] = translateFeelToSmtLib('"3"', ParseType.Unary, 'x');
+      expect(translatedExpression).toBe('(= x "3")');
+    });
+
+    it('handles variables', () => {
+      let [translatedExpression, variableNameList] = translateFeelToSmtLib('foo', ParseType.Unary, 'x');
+      expect(translatedExpression).toBe('(= x foo)');
+    });
+
+    it('handles booleans', () => {
+      let [translatedExpression, variableNameList] = translateFeelToSmtLib('true', ParseType.Unary, 'x');
+      expect(translatedExpression).toBe('(= x true)');
+    });
   });
 
-  it('handles numbers', () => {
-    let [translatedExpression, variableNameList] = translateFeelToSmtLib('"3"', ParseType.Unary, 'x');
-    expect(translatedExpression).toBe('(= x "3")');
-  });
-
-  it('handles variables', () => {
-    let [translatedExpression, variableNameList] = translateFeelToSmtLib('foo', ParseType.Unary, 'x');
-    expect(translatedExpression).toBe('(= x foo)');
-  });
-
-  it('handles booleans', () => {
-    let [translatedExpression, variableNameList] = translateFeelToSmtLib('true', ParseType.Unary, 'x');
-    expect(translatedExpression).toBe('(= x true)');
-  });
-
-  // --------- empty (-) ---------
-  it('handles a \'-\'', () => {
-    let [translatedExpression, variableNameList] = translateFeelToSmtLib('-', ParseType.Unary, 'x');
-    expect(translatedExpression).toBe('true');
+  describe('Empty (-)', () => {
+    // --------- empty (-) ---------
+    it('handles a \'-\'', () => {
+      let [translatedExpression, variableNameList] = translateFeelToSmtLib('-', ParseType.Unary, 'x');
+      expect(translatedExpression).toBe('true');
+    });
   });
 
   describe('Comparisons', () => {
-
     // --------- Comparisons ---------
     it('handles a numeric > comparison ', () => {
       let [translatedExpression, variableNameList] = translateFeelToSmtLib('> 3', ParseType.Unary, 'x');
@@ -74,10 +78,9 @@ describe('translationOfFeel – Unary tests', () => {
       let [translatedExpression, variableNameList] = translateFeelToSmtLib(feelText, ParseType.Unary, 'x');
       expect(translatedExpression).toBe(smtExpectedText);
     });
-
   });
-  describe('Comma-or', () => {
 
+  describe('Comma-or', () => {
     // --------- Comma/or ---------
     // Comma/or, which means one of the elements in the list should be true
     it('handles comma-or with string', () => {
@@ -149,24 +152,26 @@ describe('translationOfFeel – Expressions', () => {
     });
   });
 
-  it.each([
-    ['4 > 5', '(> 4 5)'],
-    ['4 < 5', '(< 4 5)'],
-    ['4 <= 5', '(<= 4 5)'],
-    ['4 >= 5', '(>= 4 5)'],
-  ])('handles a numeric %s comparison', (feelText, smtExpectedText) => {
-    let [translatedExpression, variableNameList] = translateFeelToSmtLib(feelText, ParseType.Expression);
-    expect(translatedExpression).toBe(smtExpectedText);
-  });
+  describe('Comparison', () => {
+    it.each([
+      ['4 > 5', '(> 4 5)'],
+      ['4 < 5', '(< 4 5)'],
+      ['4 <= 5', '(<= 4 5)'],
+      ['4 >= 5', '(>= 4 5)'],
+    ])('handles a numeric %s comparison', (feelText, smtExpectedText) => {
+      let [translatedExpression, variableNameList] = translateFeelToSmtLib(feelText, ParseType.Expression);
+      expect(translatedExpression).toBe(smtExpectedText);
+    });
 
-  it.each([
-    ['boo > foo', '(> boo foo)'],
-    ['boo < foo', '(< boo foo)'],
-    ['boo <= foo', '(<= boo foo)'],
-    ['boo >= foo', '(>= boo foo)'],
-  ])('handles a variable %s comparison', (feelText, smtExpectedText) => {
-    let [translatedExpression, variableNameList] = translateFeelToSmtLib(feelText, ParseType.Expression);
-    expect(translatedExpression).toBe(smtExpectedText);
+    it.each([
+      ['boo > foo', '(> boo foo)'],
+      ['boo < foo', '(< boo foo)'],
+      ['boo <= foo', '(<= boo foo)'],
+      ['boo >= foo', '(>= boo foo)'],
+    ])('handles a variable %s comparison', (feelText, smtExpectedText) => {
+      let [translatedExpression, variableNameList] = translateFeelToSmtLib(feelText, ParseType.Expression);
+      expect(translatedExpression).toBe(smtExpectedText);
+    });
   });
 
   describe('String expressions', () => {
@@ -176,8 +181,6 @@ describe('translationOfFeel – Expressions', () => {
         '"Hello World"'
       );
     });
-
-
   });
 
 
@@ -188,8 +191,6 @@ describe('translationOfFeel – Expressions', () => {
         'variable'
       );
     });
-
-
   });
 
   //boolean expressions

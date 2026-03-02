@@ -6,15 +6,16 @@ import { openTableFromTaskID } from './dmn/dmn.js';
 
 import BpmnModeler from 'bpmn-js/lib/Modeler';
 import DmnModeler from 'dmn-js/lib/Modeler';
-import DmnModdle from 'dmn-moddle';
+import { DmnModdle } from 'dmn-moddle';
 import { is } from 'bpmn-js/lib/util/ModelUtil'; // Utility to check element type
 
 // BPMN and DMN diagram XML files
-import bpmnDiagramXML from '../resources/defaultBpmnDiagram.bpmn';
-import dmnDiagramXML from '../resources/defaultDmnDiagram.dmn';
+import bpmnDiagramXML from '/resources/defaultBpmnDiagram.bpmn';
+import dmnDiagramXML from '/resources/defaultDmnDiagram.dmn';
 import './CSS/style.css';
 import CustomPaletteProvider from './bpmn/customPaletteProvider.js';
 import { jsonFromBpmnAndDmn } from './translationOfFeel.ts';
+import { TranslationError } from './customErrors.ts';
 
 // At the top level, create a moddle instance (once).
 export const dmnModdle = new DmnModdle();
@@ -23,6 +24,26 @@ let activeTaskId = null;
 
 let bpmnModeler;
 export let dmnModeler;
+
+const models = {
+  default: {
+    bpmn: '/resources/defaultBpmnDiagram.bpmn',
+    dmn: '/resources/defaultDmnDiagram.dmn',
+  },
+  takeaway: {
+    bpmn: '/Diagrams/Report_Example/diagram.bpmn',
+    dmn: '/Diagrams/Report_Example/decision-table.dmn',
+  },
+  parallel: {
+    bpmn: '/Diagrams/Parallel_Example/diagram.bpmn',
+    dmn: '/Diagrams/Parallel_Example/decision-table.dmn',
+  },
+  exclusive: {
+    bpmn: '/Diagrams/Exclusive_Example/diagram.bpmn',
+    dmn: '/Diagrams/Exclusive_Example/decision-table.dmn',
+  }
+}
+
 
 async function init() {
 
@@ -50,7 +71,16 @@ async function init() {
   rightClickOnBPMN();
 
   // Add event listener to the button
+  // on BPMN div
   document.getElementById("export-button").addEventListener("click", exportAndConvert);
+
+  document.getElementById('import-bpmn').addEventListener("change", handleFileUpload);
+  document.getElementById('import-dmn').addEventListener("change", handleFileUpload);
+  document.getElementById('download-button').addEventListener("click", handleDownload);
+
+  document.getElementById('select-model').addEventListener('change', handleModelChange);
+
+  // on DMN div
   document.getElementById("dmn-back-button").addEventListener("click", () => goBackToBpmn(dmnModeler));
 }
 
@@ -70,6 +100,117 @@ async function openDiagramBPMN(xml) {
   } catch (err) {
     console.error('Error loading BPMN diagram:', err);
   }
+}
+
+// Handles the import of files and changes the diagram for dmn or bpmn to the uploaded file
+async function handleFileUpload(htmlElement) {
+  const file = htmlElement.target.files[0];
+  // if the user have not uploaded a file
+  if (!file) {
+    return;
+  }
+
+  try {
+    let extension = file.name.substring(file.name.lastIndexOf('.') + 1, file.name.length) || undefined;
+
+    const xml = await file.text();
+
+    switch (extension) {
+      case 'bpmn':
+        await openDiagramBPMN(xml);
+        break;
+
+      case 'dmn':
+        await openDiagramDMN(xml);
+        break;
+
+      default:
+        // This shouldn't be able to happen as there are type checks in <input>
+        alert("The file type ." + extension + " is not supportet");
+        break;
+    }
+  } catch (error) {
+    console.error(error);
+    alert("Failed to load diagram, try again");
+  } finally {
+    htmlElement.target.value = '';
+  }
+}
+
+async function handleDownload() {
+  console.log("hej");
+  try {
+    const { xml: bpmnXml } = await bpmnModeler.saveXML({ format: true });
+    const { xml: dmnXml } = await dmnModeler.saveXML({ format: true });
+
+    downloadXML("Business Process Diagram.bpmn", bpmnXml);
+    downloadXML("Decision Tables.dmn", dmnXml);
+
+
+  } catch (error) {
+    console.error(error);
+    alert("Failed to download diagram, try again");
+  }
+}
+
+async function handleModelChange(htmlElement) {
+  const key = htmlElement.target.value;
+
+  // There haven't been picked any model version
+  if (!key) {
+    return;
+  }
+  const { bpmn, dmn } = models[key];
+  try {
+
+    const [bpmnXml, dmnXml] = await Promise.all([
+      fetch(bpmn).then(r => r.text()),
+      fetch(dmn).then(r => r.text())
+    ]);
+
+    await openDiagramBPMN(bpmnXml);
+    await openDiagramDMN(dmnXml);
+
+  } catch (error) {
+    console.error(error);
+    alert("Failed to load model, try again");
+  } finally {
+    htmlElement.target.value = '';
+  }
+}
+
+function downloadXML(fileName, xml) {
+  const blob = new Blob([xml], { type: 'application/xml' });
+  let url = URL.createObjectURL(blob);
+
+  const elementA = document.createElement('a')
+  elementA.href = url;
+  elementA.download = fileName;
+
+  // download the file
+  elementA.click();
+  elementA.remove();
+
+  URL.revokeObjectURL(url);
+}
+
+async function downloadURL(fileName, url) {
+  const resp = await fetch(url);
+  if (!resp.ok) {
+    console.error("download failed", resp.statusText);
+    return;
+  }
+  const blob    = await resp.blob();
+  const blobURL = URL.createObjectURL(blob);
+  const elementA = document.createElement('a')
+  elementA.href = blobURL;
+  elementA.download = fileName;
+
+  // download the file
+  elementA.click();
+  elementA.remove();
+
+  URL.revokeObjectURL(url);
 }
 
 
@@ -147,6 +288,7 @@ async function exportAndConvert() {
       throw new Error("Failed to convert BPMN and DMN");
     }
 
+
     // Send both files to backend
     const formData = new FormData();
     formData.append("bpmn", bpmnFile);
@@ -164,9 +306,18 @@ async function exportAndConvert() {
     }
 
     const data = await response.json();
+    let pnmlUrl = "http://localhost:8081" + data.pnml_url;
+    let pngUrl = "http://localhost:8081" + data.image_url;
+    // document.getElementById("petri-img").src = `http://localhost:8081${png_url}`;
+    await downloadURL("diagram.pnml", pnmlUrl);
+    await downloadURL("DPNImage.png", pngUrl);
     console.log("Conversion successful:", data);
     alert("BPMN and DMN successfully converted and saved!");
   } catch (error) {
+    if (error instanceof TranslationError) {
+      console.log(error);
+      alert("Translation failed. Check the console for details.");
+    }
     console.error("Error exporting BPMN/DMN:", error);
     alert("Export or conversion failed. Check the console for details.");
   }
@@ -188,64 +339,5 @@ export async function goBackToBpmn() {
   }
 }
 
-function showVariableModal(variableNames) {
-  return new Promise(resolve => {
-    const modal = document.getElementById('variable-modal');
-    const rowsParent = document.getElementById('variable-rows');
-    const form = document.getElementById('variable-form');
-    const cancelBtn = document.getElementById('modal-cancel');
-    const closeBtn = document.getElementById('modal-close');
-
-    // build rows
-    rowsParent.innerHTML = '';
-    variableNames.forEach(name => {
-      const row = document.createElement('div');
-      row.className = 'variable-row';
-      row.innerHTML = `
-        <label>${name}</label>
-        <select class="var-type">
-          <option value="string">string</option>
-          <option value="number">number</option>
-          <option value="boolean">boolean</option>
-        </select>
-        <input class="var-value" placeholder="Value"/>
-      `;
-      rowsParent.appendChild(row);
-    });
-
-    // handlers
-    const hide = res => { modal.style.display = 'none'; resolve(res); };
-
-    cancelBtn.onclick = () => hide(null);
-    closeBtn.onclick = () => hide(null);
-
-    form.onsubmit = e => {
-      e.preventDefault();
-      let valid = true, variables = [];
-
-      rowsParent.querySelectorAll('.variable-row').forEach(row => {
-        const name = row.querySelector('label').textContent;
-        const type = row.querySelector('.var-type').value;
-        const input = row.querySelector('.var-value');
-        const value = input.value.trim();
-        input.classList.remove('error');
-
-        if (!value) {
-          valid = false;
-          input.classList.add('error');
-        }
-        variables.push({ name, type, value });
-      });
-
-      if (!valid) {
-        alert('Please fill in every value.');
-        return;             // stay open
-      }
-      hide(variables);      // continue
-    };
-
-    modal.style.display = 'flex';
-  });
-}
 
 init();

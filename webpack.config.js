@@ -27,18 +27,20 @@ module.exports = {
       },
       {
         test: /\.bpmn$/,
-        use: 'raw-loader'
+        type: 'asset/source'
       },
       {
         test: /\.dmn$/,
-        use: 'raw-loader'
+        type: 'asset/source'
       }
     ]
   },
   plugins: [
     new CopyWebpackPlugin({
       patterns: [
-        { from: 'FrontEnd/index.html', to: '.' }
+        { from: 'FrontEnd/index.html', to: '.' },
+        { from: 'resources', to: 'resources' },
+        { from: 'Diagrams', to: 'Diagrams' }
       ]
     })
   ],
