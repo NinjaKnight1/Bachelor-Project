@@ -1,0 +1,68 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<pnml>
+  <net id="" type="http://www.pnml.org/version-2009/grammar/pnmlcoremodel">
+    <name>
+      <text></text>
+    </name>
+    <page id="n0">
+      <place id="ent_Gateway_1i050wo">
+        <name>
+          <text>ent_Gateway_1i050wo</text>
+        </name>
+      </place>
+      <place id="sink">
+        <name>
+          <text>sink</text>
+        </name>
+      </place>
+      <place id="exi_Gateway_07dbdma">
+        <name>
+          <text>exi_Gateway_07dbdma</text>
+        </name>
+      </place>
+      <place id="source">
+        <name>
+          <text>source</text>
+        </name>
+        <initialMarking>
+          <text>1</text>
+        </initialMarking>
+      </place>
+      <transition id="Activity_0km2iqk">
+        <name>
+          <text>task3</text>
+        </name>
+      </transition>
+      <transition id="Activity_06caa3x">
+        <name>
+          <text>task2</text>
+        </name>
+      </transition>
+      <transition id="Activity_16oyuj0">
+        <name>
+          <text>task1</text>
+        </name>
+      </transition>
+      <transition id="Activity_0rul266">
+        <name>
+          <text>task4</text>
+        </name>
+      </transition>
+      <arc id="4980739216" source="Activity_0rul266" target="sink"/>
+      <arc id="4980738832" source="Activity_16oyuj0" target="exi_Gateway_07dbdma"/>
+      <arc id="4980738704" source="Activity_0km2iqk" target="ent_Gateway_1i050wo"/>
+      <arc id="4980739984" source="exi_Gateway_07dbdma" target="Activity_06caa3x"/>
+      <arc id="4980740112" source="exi_Gateway_07dbdma" target="Activity_0km2iqk"/>
+      <arc id="4980739600" source="Activity_06caa3x" target="ent_Gateway_1i050wo"/>
+      <arc id="4980739728" source="ent_Gateway_1i050wo" target="Activity_0rul266"/>
+      <arc id="4980739856" source="source" target="Activity_16oyuj0"/>
+    </page>
+    <finalmarkings>
+      <marking>
+        <place idref="sink">
+          <text>1</text>
+        </place>
+      </marking>
+    </finalmarkings>
+  </net>
+</pnml>
