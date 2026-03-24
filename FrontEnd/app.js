@@ -14,7 +14,7 @@ import bpmnDiagramXML from '/resources/defaultBpmnDiagram.bpmn';
 import dmnDiagramXML from '/resources/defaultDmnDiagram.dmn';
 import './CSS/style.css';
 import CustomPaletteProvider from './bpmn/customPaletteProvider.js';
-import { jsonFromBpmnAndDmn } from './translationOfFeel.ts';
+import { jsonFromBpmnAndDmn } from './translationOfADA.ts';
 import { TranslationError } from './customErrors.ts';
 
 // At the top level, create a moddle instance (once).
