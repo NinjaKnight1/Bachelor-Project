@@ -3,7 +3,7 @@
     "target": "es2022",
     "module": "es2022",
     "strict": true,
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "esModuleInterop": true,
     // "skipLibCheck": true
     "allowUnreachableCode": false
