@@ -1,10 +1,11 @@
-import { VariableTypes, Variable } from './translationOfFeel';
+import { VariableTypes, Variable, guardsFromDmnmodeler } from './translationOfADA';
 
 const STORAGE_KEY = 'diagram_variables';
 
 class VariablePanel {
   variables: Variable[] = [];
   dmnModeler: any = null;
+  private isUpdatingFromDmn = false;
 
   constructor() {
     this.variables = this.loadVariables();
@@ -17,7 +18,17 @@ class VariablePanel {
 
   loadVariables(): Variable[] {
     const stored = localStorage.getItem(STORAGE_KEY);
-    return stored ? JSON.parse(stored) : [];
+
+    if (!stored) {
+      return [];
+    }
+
+    try {
+      return JSON.parse(stored);
+    } catch (error) {
+      console.warn('Could not read saved variables:', error);
+      return [];
+    }
   }
 
   saveVariables(): void {
@@ -27,7 +38,7 @@ class VariablePanel {
   initializePanel(): void {
     const toggleBtn = document.getElementById('variable-toggle');
     const content = document.getElementById('variable-content');
-    
+
     if (toggleBtn && content) {
       toggleBtn.addEventListener('click', () => {
         const isHidden = content.classList.toggle('hidden');
@@ -36,69 +47,56 @@ class VariablePanel {
       });
     }
 
+    const reloadBtn = document.getElementById('variable-reload');
+    if (reloadBtn) {
+      reloadBtn.addEventListener('click', () => this.updateFromDMN());
+    }
+
     this.renderVariables();
   }
 
   async updateFromDMN(): Promise<void> {
-    const dmnVariables = await this.extractVariablesFromDMN();
-    
-    // Keep existing variable data for matching names
-    const updatedVariables: Variable[] = dmnVariables.map(name => {
-      const existing = this.variables.find(v => v.name === name);
-      return existing || {
-        name: name,
-        value: '',
-        type: 'text' as VariableTypes
-      };
-    });
+    if (!this.dmnModeler || this.isUpdatingFromDmn) return;
 
-    this.variables = updatedVariables;
-    this.saveVariables();
-    this.renderVariables();
-  }
-
-  async extractVariablesFromDMN(): Promise<string[]> {
-    if (!this.dmnModeler) {
-      return [];
-    }
+    this.isUpdatingFromDmn = true;
 
     try {
-      // Get the XML from the modeler
+      // Save the current DMN state and re-import it. This forces the modeler
+      // to register ALL decision tables into getViews(), not just the ones
+      // that have been opened interactively at least once.
       const { xml } = await this.dmnModeler.saveXML({ format: true });
-      return this.extractVariablesFromXML(xml);
-    } catch (error) {
-      console.warn('Could not extract variables from DMN:', error);
-      return [];
-    }
-  }
+      await this.dmnModeler.importXML(xml);
 
-  extractVariablesFromXML(xml: string): string[] {
-    try {
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(xml, 'application/xml');
+      const variableNames = this.extractVariablesFromModeler();
 
-      const variables = new Set<string>();
-      
-      // Get all input elements from decision tables
-      const inputs = doc.querySelectorAll('input');
-      inputs.forEach(input => {
-        // Try to get label/name
-        const label = input.getAttribute('label') || input.getAttribute('name');
-        if (label) {
-          variables.add(label);
-          return;
-        }
-        
-        // Try to get from text content
-        const text = input.querySelector('text');
-        if (text && text.textContent && text.textContent.trim()) {
-          variables.add(text.textContent.trim());
-        }
+      // Preserve existing value + type for variables that haven't changed.
+      // Variables removed from the DMN are also removed from the panel.
+      this.variables = variableNames.map(name => {
+        const existing = this.variables.find(v => v.name === name);
+        return existing ?? {
+          name,
+          value: '',
+          type: VariableTypes.string,
+        };
       });
 
-      return Array.from(variables).sort();
+      this.saveVariables();
+      this.renderVariables();
     } catch (error) {
-      console.warn('Could not parse DMN XML:', error);
+      console.warn('Could not reload variables from DMN:', error);
+    } finally {
+      this.isUpdatingFromDmn = false;
+    }
+  }
+
+  extractVariablesFromModeler(): string[] {
+    if (!this.dmnModeler) return [];
+
+    try {
+      const [, variableNameSet] = guardsFromDmnmodeler(this.dmnModeler);
+      return Array.from(variableNameSet).sort();
+    } catch (error) {
+      console.warn('Could not extract variables from DMN modeler:', error);
       return [];
     }
   }

@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 import pm4py
 from pm4py.visualization.petri_net import visualizer as pn_vis_factory
 
-from replace import split_pnml_element, split_gateway
+from replace import split_pnml_element, split_gateway, add_variables_from_json_to_pnml, set_ada_markings
 from json_mani import business_task_list_json, _Xor_gatewayRules
 
 from pathlib import Path
@@ -105,6 +105,20 @@ async def convert_bpmn(
             )
             
         print("PNML file modified successfully.")
+
+        add_variables_from_json_to_pnml(
+            pnml_path=pnml_file_path,
+            json_path=json_path,
+            output_path=pnml_file_path,
+        )
+
+        set_ada_markings(
+            pnml_path=pnml_file_path,
+            output_path=pnml_file_path,
+            start_place_id="source",
+            final_place_id="sink",
+        )
+        print("PNML variables added successfully.")
 
         # Read the modified PNML file
         modified_petri_net, im, fm = pm4py.read_pnml(pnml_file_path)
