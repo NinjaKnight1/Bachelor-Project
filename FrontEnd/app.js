@@ -16,6 +16,7 @@ import './CSS/style.css';
 import CustomPaletteProvider from './bpmn/customPaletteProvider.js';
 import { jsonFromBpmnAndDmn } from './translationOfADA.ts';
 import { TranslationError } from './customErrors.ts';
+import { variablePanel } from './variablePanel.ts';
 
 // At the top level, create a moddle instance (once).
 export const dmnModdle = new DmnModdle();
@@ -65,6 +66,9 @@ async function init() {
     },
   });
 
+  // Set DMN modeler for variable panel
+  variablePanel.setDmnModeler(dmnModeler);
+
   await openDiagramBPMN(bpmnDiagramXML);
   await openDiagramDMN(dmnDiagramXML);
 
@@ -88,6 +92,7 @@ async function openDiagramDMN(xml) {
   try {
     await dmnModeler.importXML(xml);
     console.log("DMN loaded.");
+    await variablePanel.updateFromDMN();
   } catch (err) {
     console.error('Error loading DMN diagram:', err);
   }

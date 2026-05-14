@@ -1,3 +1,13 @@
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100vh;
+  border-top: 6px solid #22c55e;
+  border-left: 6px solid #22c55e;
+  border-right: 6px solid #22c55e;
+  box-sizing: border-box;
+}
+
 .canvas {
   height: 93vh;
   width: auto;
@@ -100,4 +110,117 @@ select.button-upload option:disabled { color:#d8d8d8; }
   display: flex;
   justify-content: flex-end;
   gap: 1rem;
+}
+
+.variable-panel {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  background: #fff;
+  border: 2px solid #4b6e83;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  z-index: 900;
+  max-width: 350px;
+}
+
+.variable-toggle {
+  width: 100%;
+  padding: 12px;
+  background: #4b6e83;
+  color: #fff;
+  border: none;
+  border-radius: 6px 6px 0 0;
+  cursor: pointer;
+  font-weight: bold;
+  font-size: 14px;
+  text-align: left;
+  transition: background 0.3s;
+}
+
+.variable-toggle:hover {
+  background: #043049;
+}
+
+.variable-toggle.collapsed {
+  border-radius: 6px;
+}
+
+.variable-content {
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.variable-content.hidden {
+  display: none;
+}
+
+.variables-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.variable-item {
+  display: flex;
+  gap: 6px;
+  align-items: flex-start;
+  padding: 8px;
+  background: #f5f5f5;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+}
+
+.variable-item label {
+  font-weight: 600;
+  min-width: 80px;
+  word-break: break-word;
+  color: #333;
+  font-size: 13px;
+  margin-top: 4px;
+}
+
+.variable-item input {
+  flex: 1;
+  padding: 4px 6px;
+  border: 1px solid #bbb;
+  border-radius: 4px;
+  font-size: 12px;
+}
+
+.variable-item select {
+  padding: 4px 6px;
+  border: 1px solid #bbb;
+  border-radius: 4px;
+  font-size: 12px;
+  min-width: 80px;
+}
+
+.variable-item button {
+  padding: 4px 8px;
+  background: #c00;
+  color: #fff;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 11px;
+  height: 28px;
+}
+
+.variable-item button:hover {
+  background: #900;
+}
+
+.footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 8px;
+  background-color: #22c55e;
+  z-index: 999;
 }
