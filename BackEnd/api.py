@@ -11,7 +11,6 @@ from pathlib import Path
 from fastapi.staticfiles import StaticFiles
 
 
-
 app = FastAPI()
 
 # Enable CORS
@@ -28,13 +27,14 @@ PETRI_NETS_DIR = "petri_nets"
 os.makedirs(PETRI_NETS_DIR, exist_ok=True)
 app.mount("/files", StaticFiles(directory=PETRI_NETS_DIR), name="files")
 
+
 @app.post("/convert/")
 async def convert_bpmn(
     bpmn: UploadFile = File(...),
     dmn: UploadFile = File(None),  # Optional DMN file
-    #json files
-    json: UploadFile = File(None)  # Optional JSON file for DMN rules
-    ):
+    # json files
+    json: UploadFile = File(None),  # Optional JSON file for DMN rules
+):
 
     try:
         # Save BPMN
@@ -58,7 +58,6 @@ async def convert_bpmn(
             json_path = None
             print("No JSON file provided.")
 
-    
         # Read BPMN model from saved file
         bpmn_model = pm4py.read_bpmn(bpmn_path)
 
@@ -71,8 +70,26 @@ async def convert_bpmn(
         # Read the PNML file
         pnml_file_path = bpmn_path.replace(".bpmn", ".pnml")
 
-        json_path = "petri_nets/diagramDecisions.json"  # Path to the DMN JSON file
+        # base, _ = os.path.splitext(pnml_file_path)
+        # diagram_path = base + ".png"
 
+        # gviz = pn_vis_factory.apply(petri_net, im, fm)
+        # pn_vis_factory.save(gviz, diagram_path)
+
+        # print(f"PNML saved at: {pnml_file_path}")
+        # print(f"Image saved at: {diagram_path}")
+        # print(f"PNML exists: {os.path.exists(pnml_file_path)}")
+        # print(f"Image exists: {os.path.exists(diagram_path)}")
+
+        # return {
+        #     "message": "Conversion successful!",
+        #     # "file_path": bpmn_path,
+        #     # relative URLs that the front-end can fetch
+        #     "pnml_url": f"/files/{Path(pnml_file_path).name}",
+        #     "image_url": f"/files/{Path(diagram_path).name}"
+        # }
+
+        json_path = "petri_nets/diagramDecisions.json"  # Path to the DMN JSON file
 
         # Determine the execution order of the PNML file
         businessT_list = business_task_list_json(bpmn_path, json_path)
@@ -85,25 +102,24 @@ async def convert_bpmn(
             print(f"Splitting element with ID: {task_id} into {len(rules)} elements.")
 
             split_gateway(
-                pnml_path=pnml_file_path,    # Path to the PNML file
-                element_id=task_id,          # The ID of the transition to split
-                rules=rules,                 # Rules for the task
-                output_path=pnml_file_path   # Output file path
+                pnml_path=pnml_file_path,  # Path to the PNML file
+                element_id=task_id,  # The ID of the transition to split
+                rules=rules,  # Rules for the task
+                output_path=pnml_file_path,  # Output file path
             )
         print("Xor Gateway split successfully.")
-
 
         for activity in businessT_list:
             # Activity is a tuple ((task_id, [(pre, post), ...]),...)
             task_id, rules = activity
-            
+
             split_pnml_element(
-                pnml_path=pnml_file_path,    # Path to the PNML file
-                element_id=task_id,          # The ID of the transition to split
-                rules=rules,                 # Rules for the task
-                output_path=pnml_file_path   # Output file path
+                pnml_path=pnml_file_path,  # Path to the PNML file
+                element_id=task_id,  # The ID of the transition to split
+                rules=rules,  # Rules for the task
+                output_path=pnml_file_path,  # Output file path
             )
-            
+
         print("PNML file modified successfully.")
 
         # Read the modified PNML file
@@ -112,24 +128,23 @@ async def convert_bpmn(
         # Convert the Petri Net to a DiGraph
         # Visualize the Petri Net and save the diagram
         gviz = pn_vis_factory.apply(modified_petri_net, im, fm)
-        base, _ = os.path.splitext(pnml_file_path) 
+        base, _ = os.path.splitext(pnml_file_path)
         diagram_path = base + ".png"
         pn_vis_factory.save(gviz, diagram_path)
 
-            
         return {
-        "message": "Conversion successful!", 
-        # "file_path": bpmn_path,
-        # relative URLs that the front-end can fetch
-        "pnml_url":  f"/files/{Path(pnml_file_path).name}",
-        "image_url": f"/files/{Path(diagram_path).name}"
+            "message": "Conversion successful!",
+            # "file_path": bpmn_path,
+            # relative URLs that the front-end can fetch
+            "pnml_url": f"/files/{Path(pnml_file_path).name}",
+            "image_url": f"/files/{Path(diagram_path).name}",
         }
-
 
     except Exception as e:
         return {"error": str(e)}
 
+
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=8081)
-    

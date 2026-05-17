@@ -8,5 +8,5 @@
     // "skipLibCheck": true
     "allowUnreachableCode": false
   },
-  "include": ["FrontEnd/*"]
+  "include": ["FrontEnd/*", "FrontEnd/__tests__/testModulesTypes.d.ts"]
 }

@@ -16,6 +16,7 @@ import './CSS/style.css';
 import CustomPaletteProvider from './bpmn/customPaletteProvider.js';
 import { jsonFromBpmnAndDmn } from './translationOfADA.ts';
 import { TranslationError } from './customErrors.ts';
+import { bpmnToPn } from './bpmnToDpnConversion/dbpmnToPnml.ts';
 
 // At the top level, create a moddle instance (once).
 export const dmnModdle = new DmnModdle();
@@ -272,8 +273,13 @@ function rightClickOnBPMN() {
   });
 }
 
-// Function to save the BPMN diagram as XML and trigger conversion
 async function exportAndConvert() {
+  bpmnToPn(bpmnModeler);
+}
+
+
+// Function to save the BPMN diagram as XML and trigger conversion
+async function exportAndConvertOLD() {
   try {
     // Export BPMN XML
     const { xml: bpmnXml } = await bpmnModeler.saveXML({ format: true });
@@ -288,7 +294,7 @@ async function exportAndConvert() {
       throw new Error("Failed to convert BPMN and DMN");
     }
 
-
+    console.log(bpmnModeler)
     // Send both files to backend
     const formData = new FormData();
     formData.append("bpmn", bpmnFile);
