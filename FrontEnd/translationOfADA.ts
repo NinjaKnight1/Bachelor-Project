@@ -1,6 +1,5 @@
 import { parseUnaryTests, parseExpression } from 'feelin';
 import { Tree, TreeCursor } from '@lezer/common';
-import { variablePanel } from './variablePanel';
 import { UnsupportedFeelError, TranslationError } from './customErrors';
 
 const DecisionTableType = 'decisionTable';
@@ -53,6 +52,72 @@ export type Variable = {
   value: string;
 };
 
+function buildVariablesFromNames(
+  variableNames: string[],
+  existingVariables: Variable[] = []
+): Variable[] {
+  return variableNames.map(name => {
+    const existing = existingVariables.find(variable => variable.name === name);
+
+    return existing ?? {
+      name,
+      type: VariableTypes.string,
+      value: ''
+    };
+  });
+}
+
+function extractCandidateVariableNames(expression: string): string[] {
+  const tokens = expression.match(/\b[A-Za-z_][A-Za-z0-9_]*\b/g) ?? [];
+  const blocked = new Set([
+    'true',
+    'false',
+    'and',
+    'or',
+    'not',
+    'in',
+    'between',
+    'null',
+    'undefined'
+  ]);
+
+  return tokens.filter(token => !blocked.has(token.toLowerCase()));
+}
+
+export function extractVariablesFromDmnmodeler(dmnModeler: any): string[] {
+  if (!dmnModeler) return [];
+ 
+  const viewList: Array<any> = dmnModeler.getViews?.() ?? [];
+  const variableNameSet = new Set<string>();
+ 
+  console.debug('[extractVariables] views found:', viewList.length);
+ 
+  viewList.forEach(view => {
+    if (view.type !== 'decisionTable') return;
+ 
+    const decisionLogic = view.element?.decisionLogic;
+    if (!decisionLogic) {
+      console.debug('[extractVariables] no decisionLogic on view:', view.id);
+      return;
+    }
+ 
+    // Read each input column's header expression text directly.
+    // This is the variable name the user typed in the DMN input header,
+    // e.g. "age", "order status", "customerCategory".
+    decisionLogic.input?.forEach((input: any) => {
+      const text: string | undefined = input?.inputExpression?.text?.trim();
+      console.debug('[extractVariables] input expression text:', text);
+      if (text) {
+        variableNameSet.add(text);
+      }
+    });
+  });
+ 
+  const result = Array.from(variableNameSet).sort();
+  console.debug('[extractVariables] extracted variable names:', result);
+  return result;
+}
+
 type DiagramDecision = {
   meta: string | null;
   bpmn: Array<GateGuards>;
@@ -62,7 +127,8 @@ type DiagramDecision = {
 
 export async function jsonFromBpmnAndDmn(
   bpmnModeler: any,
-  dmnModeler: any
+  dmnModeler: any,
+  existingVariables: Variable[] = []
 ): Promise<File | null> {
   try {
     const diagramDecision: DiagramDecision = parseDecisionFromfeelToSmtLib(
@@ -70,11 +136,14 @@ export async function jsonFromBpmnAndDmn(
       dmnModeler
     );
 
-    // Use variables from the variable panel
-    const panelVariables = variablePanel.getVariables();
-    if (panelVariables.length > 0) {
-      diagramDecision.variableName = panelVariables;
-    }
+    const variableNames = Array.isArray(diagramDecision.variableName)
+      ? diagramDecision.variableName.filter((name): name is string => typeof name === 'string')
+      : [];
+
+    diagramDecision.variableName = buildVariablesFromNames(
+      variableNames,
+      existingVariables
+    );
 
     const diagramDecisionJson = JSON.stringify(diagramDecision);
     const jsonOutputFile = new File(

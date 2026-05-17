@@ -78,8 +78,8 @@ async function init() {
     },
   });
 
-  // Set DMN modeler for variable panel
-  variablePanel.setDmnModeler(dmnModeler);
+  // Set BPMN + DMN modelers for variable panel
+  variablePanel.setModelers(bpmnModeler, dmnModeler);
 
   await openDiagramBPMN(bpmnDiagramXML);
   await openDiagramDMN(dmnDiagramXML);

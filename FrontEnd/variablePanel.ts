@@ -1,9 +1,10 @@
-import { VariableTypes, Variable, guardsFromDmnmodeler } from './translationOfADA';
+import { VariableTypes, Variable, extractVariablesFromDmnmodeler } from './translationOfADA';
 
 const STORAGE_KEY = 'diagram_variables';
 
 class VariablePanel {
   variables: Variable[] = [];
+  bpmnModeler: any = null;
   dmnModeler: any = null;
   private isUpdatingFromDmn = false;
 
@@ -12,7 +13,8 @@ class VariablePanel {
     this.initializePanel();
   }
 
-  setDmnModeler(dmnModeler: any): void {
+  setModelers(bpmnModeler: any, dmnModeler: any): void {
+    this.bpmnModeler = bpmnModeler;
     this.dmnModeler = dmnModeler;
   }
 
@@ -56,48 +58,61 @@ class VariablePanel {
   }
 
   async updateFromDMN(): Promise<void> {
-    if (!this.dmnModeler || this.isUpdatingFromDmn) return;
+    if (!this.bpmnModeler || !this.dmnModeler) {
+      console.warn('Could not reload variables from DMN: modelers are not ready yet');
+      return;
+    }
+
+    if (this.isUpdatingFromDmn) {
+      return;
+    }
 
     this.isUpdatingFromDmn = true;
 
+    // Show loading state on the reload button
+    const reloadBtn = document.getElementById('variable-reload');
+    const originalLabel = reloadBtn?.textContent ?? '';
+    if (reloadBtn) {
+      reloadBtn.textContent = 'Loading…';
+      (reloadBtn as HTMLButtonElement).disabled = true;
+    }
+
     try {
-      // Save the current DMN state and re-import it. This forces the modeler
-      // to register ALL decision tables into getViews(), not just the ones
-      // that have been opened interactively at least once.
-      const { xml } = await this.dmnModeler.saveXML({ format: true });
-      await this.dmnModeler.importXML(xml);
+      // Mirror exactly what exportAndConvert does: save the full DMN XML and
+      // re-import it so that every decision table view is registered in
+      // getViews(), including tables that were never opened interactively.
+      const { xml: dmnXml } = await this.dmnModeler.saveXML({ format: true });
+      await this.dmnModeler.importXML(dmnXml);
 
-      const variableNames = this.extractVariablesFromModeler();
+      // Extract variable names from all decision table input columns
+      const freshNames: string[] = extractVariablesFromDmnmodeler(this.dmnModeler);
 
-      // Preserve existing value + type for variables that haven't changed.
-      // Variables removed from the DMN are also removed from the panel.
-      this.variables = variableNames.map(name => {
+      // Build the new variable list, preserving existing value + type for
+      // variables that haven't changed. Variables removed from the DMN are
+      // dropped from the panel automatically.
+      this.variables = freshNames.map(name => {
         const existing = this.variables.find(v => v.name === name);
-        return existing ?? {
+        return {
           name,
-          value: '',
-          type: VariableTypes.string,
+          value: existing?.value ?? '',
+          type: existing?.type ?? VariableTypes.string,
         };
       });
 
       this.saveVariables();
       this.renderVariables();
     } catch (error) {
-      console.warn('Could not reload variables from DMN:', error);
+      const message = error instanceof Error ? error.message : String(error);
+      console.error('Could not reload variables from DMN:', error);
+      alert(`Could not reload variables from DMN: ${message}`);
     } finally {
       this.isUpdatingFromDmn = false;
-    }
-  }
 
-  extractVariablesFromModeler(): string[] {
-    if (!this.dmnModeler) return [];
-
-    try {
-      const [, variableNameSet] = guardsFromDmnmodeler(this.dmnModeler);
-      return Array.from(variableNameSet).sort();
-    } catch (error) {
-      console.warn('Could not extract variables from DMN modeler:', error);
-      return [];
+      // Restore the reload button
+      if (reloadBtn) {
+        reloadBtn.textContent = originalLabel;
+        (reloadBtn as HTMLButtonElement).disabled = false;
+      }
     }
   }
 
