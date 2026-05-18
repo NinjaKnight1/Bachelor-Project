@@ -50,11 +50,26 @@ export type Variable = {
   value: string;
 }
 
+function buildVariablesFromNames(
+  variableNames: string[],
+  existingVariables: Variable[] = []
+): Variable[] {
+  return variableNames.map(name => {
+    const existing = existingVariables.find(variable => variable.name === name);
+
+    return existing ?? {
+      name,
+      type: VariableTypes.string,
+      value: ''
+    };
+  });
+}
+
 type DiagramDecision = {
   meta: string | null;
   bpmn: Array<GateGuards>;
   dmn: Array<DecisionTable>;
-  variableName: Array<Variable> | Array<string>;
+  variableName: Array<Variable>;
 }
 
 
@@ -64,7 +79,10 @@ export async function jsonFromBpmnAndDmn(bpmnModeler: any, dmnModeler: any): Pro
     let diagramDecision: DiagramDecision = parseDecisionFromfeelToSmtLib(bpmnModeler, dmnModeler);
 
     if ((diagramDecision.variableName.length > 0)) {
-      const variables = await promptVariables(diagramDecision.variableName as string[]);
+      const variables = await promptVariables(
+        diagramDecision.variableName.map(variable => variable.name),
+        diagramDecision.variableName
+      );
       if (!variables) {
         return null;
       }
@@ -91,11 +109,12 @@ export function parseDecisionFromfeelToSmtLib(bpmnModeler: any, dmnModeler: any)
     let [gateGuardList, gateGuardVariableNameSet] = guardsFromBpmnmodeler(bpmnModeler);
     gateGuardVariableNameSet.forEach(name => decisionTableVariableNameSet.add(name));
     let variableNameList = [...decisionTableVariableNameSet];
+    const variables = buildVariablesFromNames(variableNameList);
     let jsonOutput: DiagramDecision = {
       meta: null,
       bpmn: gateGuardList,
       dmn: decisionTableList,
-      variableName: variableNameList,
+      variableName: variables,
     }
 
     return jsonOutput;

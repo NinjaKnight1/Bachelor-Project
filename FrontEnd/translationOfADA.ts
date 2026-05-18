@@ -118,18 +118,18 @@ export function extractVariablesFromDmnmodeler(dmnModeler: any): string[] {
   return result;
 }
 
-type DiagramDecision = {
+export type DiagramDecision = {
   meta: string | null;
   bpmn: Array<GateGuards>;
   dmn: Array<DecisionTable>;
-  variableName: Array<Variable> | Array<string>;
+  variableName: Array<Variable>;
 };
 
-export async function jsonFromBpmnAndDmn(
+export function decisionDiagramFromBpmnAndDmn(
   bpmnModeler: any,
   dmnModeler: any,
   existingVariables: Variable[] = []
-): Promise<File | null> {
+): DiagramDecision {
   try {
     const diagramDecision: DiagramDecision = parseDecisionFromfeelToSmtLib(
       bpmnModeler,
@@ -137,7 +137,7 @@ export async function jsonFromBpmnAndDmn(
     );
 
     const variableNames = Array.isArray(diagramDecision.variableName)
-      ? diagramDecision.variableName.filter((name): name is string => typeof name === 'string')
+      ? diagramDecision.variableName.map(variable => variable.name)
       : [];
 
     diagramDecision.variableName = buildVariablesFromNames(
@@ -145,14 +145,8 @@ export async function jsonFromBpmnAndDmn(
       existingVariables
     );
 
-    const diagramDecisionJson = JSON.stringify(diagramDecision);
-    const jsonOutputFile = new File(
-      [diagramDecisionJson],
-      'diagramDecisions.json',
-      { type: 'text/json' }
-    );
+    return diagramDecision;
 
-    return jsonOutputFile;
   } catch (error) {
     if (error instanceof TranslationError) {
       throw new TranslationError(error.error, 'DMN/BPMN');
@@ -177,12 +171,13 @@ export function parseDecisionFromfeelToSmtLib(
     );
 
     const variableNameList = [...decisionTableVariableNameSet];
+    const variables = buildVariablesFromNames(variableNameList);
 
     const jsonOutput: DiagramDecision = {
       meta: null,
       bpmn: gateGuardList,
       dmn: decisionTableList,
-      variableName: variableNameList
+      variableName: variables
     };
 
     return jsonOutput;
