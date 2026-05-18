@@ -35,8 +35,19 @@
     <button class="button" id="dmn-back-button">Back to BPMN</button>
   </div>
 
-  <script src="app.js"></script>
+  <div id="variable-panel" class="variable-panel">
+    <div class="variable-panel-header">
+      <button id="variable-toggle" class="variable-toggle">Variables ▼</button>
+      <button id="variable-reload" class="variable-reload" title="Reload variables from DMN">↻</button>
+    </div>
+    <div id="variable-content" class="variable-content">
+      <div id="variables-list" class="variables-list"></div>
+    </div>
+  </div>
 
+  <footer class="footer"></footer>
+
+  <script src="app.js"></script>
 
 </body>
 

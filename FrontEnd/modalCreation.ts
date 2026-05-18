@@ -1,7 +1,7 @@
 import { Variable, VariableTypes } from './translationOfFeel';
 
 
-export async function promptVariables(variableNames: string[]): Promise<Variable[] | null> {
+export async function promptVariables(variableNames: string[], existingVariables?: Variable[]): Promise<Variable[] | null> {
   return new Promise(resolve => {
     const dlg = document.createElement('dialog');
     dlg.style.border = 'none';
@@ -26,18 +26,21 @@ export async function promptVariables(variableNames: string[]): Promise<Variable
     document.body.appendChild(dlg);
 
     const rows = dlg.querySelector<HTMLDivElement>('#rows')!;
-    variableNames.forEach(vn => {
+    variableNames.forEach((vn, idx) => {
+      // Find existing variable with same name
+      const existing = existingVariables?.find(v => v.name === vn);
+      
       // each value in the VariableTypes is made to an option 
       const options = Object.values(VariableTypes)
-        .map(t => `<option value="${t}">${t}</option>`)   
+        .map(t => `<option value="${t}" ${t === existing?.type ? 'selected' : ''}>${t}</option>`)   
         .join('');
       rows.insertAdjacentHTML(
         'beforeend',
         `<div class="row">
           <span>${vn}</span>
-          <input placeholder="value for ${vn}" />
+          <input placeholder="value for ${vn}" value="${existing?.value || ''}" />
           <select>
-            <option value="" disabled selected>type</option>
+            <option value="" ${!existing ? 'selected' : ''}>type</option>
             ${options}  
           </select>
         </div>`

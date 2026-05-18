@@ -18,6 +18,13 @@ import { jsonFromBpmnAndDmn } from './translationOfADA.ts';
 import { TranslationError } from './customErrors.ts';
 import { bpmnToPn } from './bpmnToDpnConversion/dbpmnToDpn.ts';
 import { dpnToPnmlFile } from './bpmnToDpnConversion/dpnToPnml.ts';
+import { variablePanel } from './variablePanel.ts';
+
+import lintModule from 'bpmn-js-bpmnlint';
+import 'bpmn-js-bpmnlint/dist/assets/css/bpmn-js-bpmnlint.css';
+
+import bpmnlintConfig from '../bundled-config.js';
+
 
 // At the top level, create a moddle instance (once).
 export const dmnModdle = new DmnModdle();
@@ -50,11 +57,17 @@ const models = {
 async function init() {
 
   bpmnModeler = new BpmnModeler({
-    container: '#bpmn-canvas',
-    additionalModules: [
-      CustomPaletteProvider
-    ],
-  });
+  container: '#bpmn-canvas',
+
+  additionalModules: [
+    CustomPaletteProvider,
+    lintModule
+  ],
+
+  linting: {
+    bpmnlint: bpmnlintConfig
+  }
+});
 
   dmnModeler = new DmnModeler({
     container: '#dmn-canvas',
@@ -66,6 +79,9 @@ async function init() {
       ]
     },
   });
+
+  // Set BPMN + DMN modelers for variable panel
+  variablePanel.setModelers(bpmnModeler, dmnModeler);
 
   await openDiagramBPMN(bpmnDiagramXML);
   await openDiagramDMN(dmnDiagramXML);
@@ -90,10 +106,12 @@ async function openDiagramDMN(xml) {
   try {
     await dmnModeler.importXML(xml);
     console.log("DMN loaded.");
+    await variablePanel.updateFromDMN();
   } catch (err) {
     console.error('Error loading DMN diagram:', err);
   }
 }
+
 
 async function openDiagramBPMN(xml) {
   try {
@@ -172,6 +190,9 @@ async function handleModelChange(htmlElement) {
 
     await openDiagramBPMN(bpmnXml);
     await openDiagramDMN(dmnXml);
+    
+    // Re-attach right-click handler to new BPMN elements
+    rightClickOnBPMN();
 
   } catch (error) {
     console.error(error);
@@ -293,6 +314,10 @@ async function exportAndConvertOLD() {
     const { xml: dmnXml } = await dmnModeler.saveXML({ format: true });
     const dmnFile = new File([dmnXml], "decision-table.dmn", { type: "text/xml" });
 
+    // Make sure the variable panel contains variables from the latest DMN state
+    // before creating the JSON used by the backend.
+    await variablePanel.updateFromDMN();
+
     let diagramDecisionJsonFile = await jsonFromBpmnAndDmn(bpmnModeler, dmnModeler);
     if (!diagramDecisionJsonFile) {
       throw new Error("Failed to convert BPMN and DMN");
@@ -338,6 +363,7 @@ export async function goBackToBpmn() {
   try {
     const { xml: updatedDmnXml } = await dmnModeler.saveXML({ format: true });
     await dmnModeler.importXML(updatedDmnXml);
+    await variablePanel.updateFromDMN();
 
     document.getElementById('dmn-container').style.display = 'none';
     document.getElementById('bpmn-container').style.display = 'block';

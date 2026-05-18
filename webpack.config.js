@@ -32,7 +32,14 @@ module.exports = {
       {
         test: /\.dmn$/,
         type: 'asset/source'
-      }
+      }, {
+        test: /\.bpmnlintrc$/,
+        use: [
+        {
+          loader: 'bpmnlint-loader'
+        }
+  ]
+}
     ]
   },
   plugins: [
