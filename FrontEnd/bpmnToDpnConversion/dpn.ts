@@ -13,7 +13,7 @@ type Place = {
 type Transition = {
   id: string;
   name: string | null;
-  gaurd: string[] | null;
+  gaurd: string | null;
   source: string[];
   target: string[];
   gate: Gateway | null;
@@ -30,15 +30,15 @@ class DPN {
   places: Map<string, Place>;
   transitions: Map<string, Transition>;
   arcs: Map<string, Arc>;
-  source: string[];
-  sink: string[];
+  source: Map<string, Number>;
+  sink: Map<string, Number>;
 
   constructor() {
     this.places = new Map<string, Place>();
     this.transitions = new Map<string, Transition>();
     this.arcs = new Map<string, Arc>();
-    this.source = [];
-    this.sink = [];
+    this.source = new Map<string, Number>();
+    this.sink = new Map<string, Number>();
 
     this.createSorceAndSink();
   }
@@ -47,8 +47,8 @@ class DPN {
     const sourceId = this.addPlace("source");
     const sinkId = this.addPlace("sink");
 
-    this.source.push(sourceId);
-    this.source.push(sinkId);
+    this.source.set(sourceId,1);
+    this.sink.set(sinkId,1);
   }
 
   addPlace(id: string): string {

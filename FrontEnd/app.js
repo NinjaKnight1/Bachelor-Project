@@ -16,7 +16,8 @@ import './CSS/style.css';
 import CustomPaletteProvider from './bpmn/customPaletteProvider.js';
 import { jsonFromBpmnAndDmn } from './translationOfADA.ts';
 import { TranslationError } from './customErrors.ts';
-import { bpmnToPn } from './bpmnToDpnConversion/dbpmnToPnml.ts';
+import { bpmnToPn } from './bpmnToDpnConversion/dbpmnToDpn.ts';
+import { dpnToPnmlFile } from './bpmnToDpnConversion/dpnToPnml.ts';
 
 // At the top level, create a moddle instance (once).
 export const dmnModdle = new DmnModdle();
@@ -201,7 +202,7 @@ async function downloadURL(fileName, url) {
     console.error("download failed", resp.statusText);
     return;
   }
-  const blob    = await resp.blob();
+  const blob = await resp.blob();
   const blobURL = URL.createObjectURL(blob);
   const elementA = document.createElement('a')
   elementA.href = blobURL;
@@ -274,7 +275,10 @@ function rightClickOnBPMN() {
 }
 
 async function exportAndConvert() {
-  bpmnToPn(bpmnModeler);
+  const dpn = bpmnToPn(bpmnModeler);
+
+  const xmlString = dpnToPnmlFile(dpn);
+  // downloadXML("dpn.pnml", xmlString);
 }
 
 

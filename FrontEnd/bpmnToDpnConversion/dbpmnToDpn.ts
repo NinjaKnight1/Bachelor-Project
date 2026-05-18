@@ -1,7 +1,7 @@
 import BpmnModeler from 'bpmn-js/lib/Modeler';
 import { DPN } from './dpn';
 
-function bpmnToPn(bpmnModeler: BpmnModeler) {
+function bpmnToPn(bpmnModeler: BpmnModeler): DPN {
   let dpn = new DPN();
 
   let definitions = bpmnModeler.getDefinitions()
@@ -16,7 +16,7 @@ function bpmnToPn(bpmnModeler: BpmnModeler) {
     console.log(flowElementList);
 
     flowElementList.forEach((flowElement: any) => {
-      switch (flowElement) {
+      switch (flowElement.$type) {
         case 'bpmn:SequenceFlow':
           const flowId = flowElement.id;
           dpn.addPlace(flowId);
@@ -28,7 +28,6 @@ function bpmnToPn(bpmnModeler: BpmnModeler) {
 
 
     flowElementList.forEach((flowElement: any) => {
-
       switch (flowElement.$type) {
         case 'bpmn:Task':
         case 'bpmn:BusinessRuleTask':
@@ -71,15 +70,45 @@ function bpmnToPn(bpmnModeler: BpmnModeler) {
           });
           dpn.addArcToEndTransition(endId);
           break;
-        case '':
+        case 'bpmn:ExclusiveGateway':
+          const exclusiveId = flowElement.id
+          const exclusiveName = flowElement.name ?? null;
+
+          const exclusiveIncomingIdList = flowToId(flowElement.incoming);
+          const exclusiveOutgoingIdList = flowToId(flowElement.outgoing);
+          const i = 0;
+          if (exclusiveIncomingIdList.length == 1 && exclusiveOutgoingIdList.length > 1) {
+            // dpn.addTransition()
+          } else if (exclusiveIncomingIdList.length > 1 && exclusiveOutgoingIdList.length == 1) {
+            
+          } else {
+            // Should this be possible 
+          }
 
           break;
+        case 'bpmn:ParallelGateway':
+          const parallelId = flowElement.id
+          const parallelName = flowElement.name ?? null;
+          dpn.addTransition(parallelId, parallelName);
+
+          const parallelIncomingIdList = flowToId(flowElement.incoming);
+          parallelIncomingIdList.forEach(incomingId => {
+            dpn.addArc(incomingId, parallelId);
+          });
+
+          const parallelOutgoingIdList = flowToId(flowElement.outgoing);
+          parallelOutgoingIdList.forEach(outgoingId => {
+            dpn.addArc(parallelId, outgoingId);
+          });
+          break;
         default:
+          console.log(flowElement.$type);
           break;
       }
     });
 
   });
+  return dpn;
 }
 
 function flowToId(flowList: Array<any>): Array<string> {
