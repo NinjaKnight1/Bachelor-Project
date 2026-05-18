@@ -1,4 +1,4 @@
-import { VariableTypes, Variable, extractVariablesFromDmnmodeler } from './translationOfADA';
+import { VariableTypes, Variable, DiagramDecision, decisionDiagramFromBpmnAndDmn } from './translationOfADA';
 
 const STORAGE_KEY = 'diagram_variables';
 
@@ -84,16 +84,19 @@ class VariablePanel {
       const { xml: dmnXml } = await this.dmnModeler.saveXML({ format: true });
       await this.dmnModeler.importXML(dmnXml);
 
-      // Extract variable names from all decision table input columns
-      const freshNames: string[] = extractVariablesFromDmnmodeler(this.dmnModeler);
+      const diagramDecision: DiagramDecision = decisionDiagramFromBpmnAndDmn(
+        this.bpmnModeler,
+        this.dmnModeler,
+        this.variables
+      );
 
       // Build the new variable list, preserving existing value + type for
       // variables that haven't changed. Variables removed from the DMN are
       // dropped from the panel automatically.
-      this.variables = freshNames.map(name => {
-        const existing = this.variables.find(v => v.name === name);
+      this.variables = diagramDecision.variableName.map(variable => {
+        const existing = this.variables.find(v => v.name === variable.name);
         return {
-          name,
+          name: variable.name,
           value: existing?.value ?? '',
           type: existing?.type ?? VariableTypes.string,
         };
