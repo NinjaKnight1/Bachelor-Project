@@ -1,3 +1,5 @@
+import { VariableTypes, Variable } from '../translationOfADA';
+
 enum Gateway {
   Exclusive,
   Parallel
@@ -25,13 +27,13 @@ type Arc = {
   target: string;
 }
 
-
 class DPN {
   places: Map<string, Place>;
   transitions: Map<string, Transition>;
   arcs: Map<string, Arc>;
   source: Map<string, Number>;
   sink: Map<string, Number>;
+  variables: Array<Variable>;
 
   constructor() {
     this.places = new Map<string, Place>();
@@ -39,6 +41,7 @@ class DPN {
     this.arcs = new Map<string, Arc>();
     this.source = new Map<string, Number>();
     this.sink = new Map<string, Number>();
+    this.variables = [];
 
     this.createSorceAndSink();
   }
@@ -47,8 +50,8 @@ class DPN {
     const sourceId = this.addPlace("source");
     const sinkId = this.addPlace("sink");
 
-    this.source.set(sourceId,1);
-    this.sink.set(sinkId,1);
+    this.source.set(sourceId, 1);
+    this.sink.set(sinkId, 1);
   }
 
   addPlace(id: string): string {
@@ -62,12 +65,12 @@ class DPN {
     return id;
   }
 
-  addTransition(id: string, name: string | null, gate: Gateway | null = null): string {
+  addTransition(id: string, name: string | null, gate: Gateway | null = null, gaurd: string | null = null): string {
     if (!this.transitions.has(id)) {
       this.transitions.set(id, {
         id: id,
         name: name,
-        gaurd: null,
+        gaurd: gaurd,
         source: [],
         target: [],
         gate: gate
@@ -85,6 +88,14 @@ class DPN {
         target: targetId,
       })
     }
+    // const place = this.places.get(sourceId) ?? this.places.get(targetId);
+    // console.log("place is: " + place);
+    // console.log("source and target is: "+ sourceId + " "+ targetId);
+
+
+    // if (this.places.has(sourceId)) {
+
+    // }
     return id;
   }
 
@@ -108,11 +119,10 @@ class DPN {
         target: "sink"
       });
     }
-
   }
 }
 
 
 export {
-  DPN
+  DPN, Gateway
 }

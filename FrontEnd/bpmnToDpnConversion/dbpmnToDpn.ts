@@ -1,19 +1,35 @@
 import BpmnModeler from 'bpmn-js/lib/Modeler';
-import { DPN } from './dpn';
+import { DPN, Gateway } from './dpn';
+import { decisionDiagramFromBpmnAndDmn, DiagramDecision, DecisionTable, GateGuards, Variable } from '../translationOfADA';
+import { variablePanel } from '../variablePanel';
 
-function bpmnToPn(bpmnModeler: BpmnModeler): DPN {
+async function bpmnToPn(bpmnModeler: any, dmnModeler: any): Promise<DPN> {
+  await variablePanel.updateFromDMN();
+  const variableList = variablePanel.getVariables();
+
+  // TODO: Check if all variables have a value.
+
+  const diagramDecision: DiagramDecision = decisionDiagramFromBpmnAndDmn(
+    bpmnModeler,
+    dmnModeler,
+  );
+  const gateGuardMap = diagramDecision.bpmn;
+  const decisionTableMap = diagramDecision.dmn;
+
+
   let dpn = new DPN();
 
+  dpn.variables = variableList;
+
   let definitions = bpmnModeler.getDefinitions()
-  console.log(definitions);
   let diagramList = definitions.diagrams;
   diagramList.forEach((diagram: any) => {
     let plane = diagram.plane;
     let bpmnElement = plane.bpmnElement;
     let flowElementList = bpmnElement.flowElements;
-    let artifactList = bpmnElement.artifacts;
-    console.log(typeof flowElementList);
-    console.log(flowElementList);
+    // let artifactList = bpmnElement.artifacts;
+    // console.log(typeof flowElementList);
+    // console.log(flowElementList);
 
     flowElementList.forEach((flowElement: any) => {
       switch (flowElement.$type) {
@@ -26,11 +42,9 @@ function bpmnToPn(bpmnModeler: BpmnModeler): DPN {
       }
     });
 
-
     flowElementList.forEach((flowElement: any) => {
       switch (flowElement.$type) {
         case 'bpmn:Task':
-        case 'bpmn:BusinessRuleTask':
           const taskId = flowElement.id;
           const taskName = flowElement.name ?? null;
           dpn.addTransition(taskId, taskName);
@@ -46,6 +60,36 @@ function bpmnToPn(bpmnModeler: BpmnModeler): DPN {
             dpn.addArc(taskId, outgoingId);
           });
           break;
+        case 'bpmn:BusinessRuleTask':
+          const businessTaskId = flowElement.id;
+          const businessTaskName = flowElement.name ?? null;
+          const decisionTable = decisionTableMap.get(businessTaskId);
+          if (decisionTable == undefined) {
+            throw new Error(
+              'Could not find a matching DMN decision table for BusinessRuleTask "' +
+              businessTaskName +
+              '". Expected a table id matching the task id, name, or decision reference.',
+            );
+          }
+          const rules = decisionTable.rules;
+          rules.forEach((rule, index) => {
+            const businessTaskGaurdId = businessTaskId + "_" + index;
+            dpn.addTransition(businessTaskGaurdId, businessTaskName, null, rule.pre + " && " + rule.post);
+
+
+            const businessTaskIncomingIdList = flowToId(flowElement.incoming);
+            businessTaskIncomingIdList.forEach(incomingId => {
+              dpn.addArc(incomingId, businessTaskGaurdId);
+            });
+
+            const businessTaskOutgoingIdList = flowToId(flowElement.outgoing);
+            businessTaskOutgoingIdList.forEach(outgoingId => {
+              dpn.addArc(businessTaskGaurdId, outgoingId);
+            });
+          });
+
+          break;
+
         case 'bpmn:StartEvent':
           const startId = flowElement.id;
           const startName = flowElement.name ?? null;
@@ -77,12 +121,69 @@ function bpmnToPn(bpmnModeler: BpmnModeler): DPN {
           const exclusiveIncomingIdList = flowToId(flowElement.incoming);
           const exclusiveOutgoingIdList = flowToId(flowElement.outgoing);
           const i = 0;
+          console.log("Exclusive incoming is: " + exclusiveIncomingIdList);
+          console.log("Exclusive outgoing is: " + exclusiveOutgoingIdList);
+          const guardsForGateway = gateGuardMap.get(exclusiveId);
           if (exclusiveIncomingIdList.length == 1 && exclusiveOutgoingIdList.length > 1) {
-            // dpn.addTransition()
+            if (guardsForGateway == undefined) {
+              throw new Error("There isn't added gaurd to the exclusive gateway: " + exclusiveName);
+            }
+
+            const inputPlaceId = exclusiveIncomingIdList[0];
+
+            exclusiveOutgoingIdList.forEach((outgoingFlowId, index) => {
+              const guard = findGuardForSequenceFlow(guardsForGateway, outgoingFlowId);
+
+              if (guard === undefined) {
+                throw new Error(
+                  'Missing guard for outgoing sequence flow "' +
+                  outgoingFlowId +
+                  '" on exclusive gateway "' +
+                  exclusiveName +
+                  '".',
+                );
+              }
+
+              const transitionId = exclusiveId + "_" + index;
+
+              dpn.addTransition(
+                transitionId,
+                null,
+                Gateway.Exclusive,
+                guard.pre,
+              );
+
+              dpn.addArc(inputPlaceId, transitionId);
+              dpn.addArc(transitionId, outgoingFlowId);
+            });
+
           } else if (exclusiveIncomingIdList.length > 1 && exclusiveOutgoingIdList.length == 1) {
-            
+            const outputPlaceId = exclusiveOutgoingIdList[0];
+
+            exclusiveIncomingIdList.forEach((incomingFlowId, index) => {
+              const transitionId = exclusiveId + "_" + index;
+
+              dpn.addTransition(
+                transitionId,
+                null,
+                Gateway.Exclusive,
+                null,
+              );
+
+              dpn.addArc(incomingFlowId, transitionId);
+              dpn.addArc(transitionId, outputPlaceId);
+            });
+
           } else {
-            // Should this be possible 
+            throw new Error(
+              'Unsupported exclusive gateway shape for "' +
+              exclusiveName +
+              '". It has ' +
+              exclusiveIncomingIdList.length +
+              ' incoming and ' +
+              exclusiveOutgoingIdList.length +
+              ' outgoing sequence flows.',
+            );
           }
 
           break;
@@ -108,6 +209,7 @@ function bpmnToPn(bpmnModeler: BpmnModeler): DPN {
     });
 
   });
+
   return dpn;
 }
 
@@ -119,6 +221,13 @@ function flowToId(flowList: Array<any>): Array<string> {
     });
   }
   return idList;
+}
+
+function findGuardForSequenceFlow(
+  guards: GateGuards[],
+  sequenceFlowId: string,
+): GateGuards | undefined {
+  return guards.find(guard => guard.arcId === sequenceFlowId);
 }
 
 export { bpmnToPn };

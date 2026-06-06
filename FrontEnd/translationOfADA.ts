@@ -21,7 +21,7 @@ export enum VariableTypes {
   boolean = 'boolean'
 }
 
-type DecisionTable = {
+export type DecisionTable = {
   tableId: string;
   hitPolicy: string;
   inputs: Array<Expression>;
@@ -29,18 +29,19 @@ type DecisionTable = {
   rules: Array<Rule>;
 };
 
-type Expression = {
+export type Expression = {
   expression: string;
 };
 
-type Rule = {
+export type Rule = {
   row: number;
   pre: string;
   post: string;
 };
 
-type GateGuards = {
+export type GateGuards = {
   sourceId: string;
+  arcId: string;
   targetId: string;
   pre: string;
   post: string;
@@ -86,21 +87,21 @@ function extractCandidateVariableNames(expression: string): string[] {
 
 export function extractVariablesFromDmnmodeler(dmnModeler: any): string[] {
   if (!dmnModeler) return [];
- 
+
   const viewList: Array<any> = dmnModeler.getViews?.() ?? [];
   const variableNameSet = new Set<string>();
- 
+
   console.debug('[extractVariables] views found:', viewList.length);
- 
+
   viewList.forEach(view => {
     if (view.type !== 'decisionTable') return;
- 
+
     const decisionLogic = view.element?.decisionLogic;
     if (!decisionLogic) {
       console.debug('[extractVariables] no decisionLogic on view:', view.id);
       return;
     }
- 
+
     // Read each input column's header expression text directly.
     // This is the variable name the user typed in the DMN input header,
     // e.g. "age", "order status", "customerCategory".
@@ -112,16 +113,21 @@ export function extractVariablesFromDmnmodeler(dmnModeler: any): string[] {
       }
     });
   });
- 
+
   const result = Array.from(variableNameSet).sort();
   console.debug('[extractVariables] extracted variable names:', result);
   return result;
 }
 
+
+/**
+ * Where the map in bpmn is the sourceId with a array of attached gate gaurds.
+ * The map for dmn is a string with DecisionTable, where the string is the table id.
+ */
 export type DiagramDecision = {
   meta: string | null;
-  bpmn: Array<GateGuards>;
-  dmn: Array<DecisionTable>;
+  bpmn: Map<string, GateGuards[]>;
+  dmn: Map<string, DecisionTable>;
   variableName: Array<Variable>;
 };
 
@@ -192,16 +198,16 @@ export function parseDecisionFromfeelToSmtLib(
 
 function guardsFromBpmnmodeler(
   bpmnModeler: any
-): [Array<GateGuards>, Set<string>] {
-  const guardsExpressionList: Array<GateGuards> = [];
-  const variableNameSet = new Set<string>();
-  const errorList: Array<string> = [];
+): [Map<string, Array<GateGuards>>, Set<string>] {
+  let guardsExpressionMap: Map<string, Array<GateGuards>> = new Map<string, Array<GateGuards>>();
+  let variableNameSet = new Set<string>();
+  let errorList: Array<string> = [];
 
   const definitions = bpmnModeler._definitions;
   const rootElementList: Array<any> = definitions.rootElements || [];
 
   if (!(rootElementList.length > 0)) {
-    return [guardsExpressionList, variableNameSet];
+    return [guardsExpressionMap, variableNameSet];
   }
 
   for (const rootElement of rootElementList) {
@@ -214,7 +220,9 @@ function guardsFromBpmnmodeler(
     for (const artifact of artifactList) {
       switch (artifact.$type) {
         case 'bpmn:Association': {
+          console.log(artifact)
           const artifactSourceRef = artifact.sourceRef;
+          console.log(artifactSourceRef)
 
           if (artifactSourceRef.sourceRef.$type === 'bpmn:ExclusiveGateway') {
             const gateText = artifact.targetRef.text;
@@ -229,15 +237,25 @@ function guardsFromBpmnmodeler(
 
               const sourceId = artifactSourceRef.sourceRef.id;
               const targetId = artifactSourceRef.targetRef.id;
+              const arcId = artifactSourceRef.id;
 
               const guard: GateGuards = {
                 sourceId,
+                arcId,
                 targetId,
                 pre: translatedGateText,
                 post: 'true'
               };
-
-              guardsExpressionList.push(guard);
+              if(guardsExpressionMap.has(sourceId)) {
+                let guardsForSourceIdList = guardsExpressionMap.get(sourceId);
+                if (guardsForSourceIdList == undefined) {
+                  guardsForSourceIdList = []
+                }
+                guardsForSourceIdList.push(guard);
+                guardsExpressionMap.set(sourceId, guardsForSourceIdList);
+              }else {
+                guardsExpressionMap.set(sourceId, [guard]);
+              }
             } catch (error) {
               if (error instanceof UnsupportedFeelError) {
                 errorList.push(error.message);
@@ -257,15 +275,15 @@ function guardsFromBpmnmodeler(
     throw new TranslationError(errorList);
   }
 
-  return [guardsExpressionList, variableNameSet];
+  return [guardsExpressionMap, variableNameSet];
 }
 
 export function guardsFromDmnmodeler(
   dmnModeler: any
-): [Array<DecisionTable>, Set<string>] {
+): [Map<string, DecisionTable>, Set<string>] {
   const viewList: Array<any> = dmnModeler.getViews();
 
-  const decisionTableList = new Array<DecisionTable>();
+  const decisionTableList = new Map<string, DecisionTable>();
   const variableNameSet = new Set<string>();
   const errorList: Array<string> = [];
 
@@ -295,7 +313,7 @@ export function guardsFromDmnmodeler(
             if (error instanceof UnsupportedFeelError) {
               errorList.push(
                 error.message +
-                  ` in decisiontable with the name "${view.name}", in the input header`
+                ` in decisiontable with the name "${view.name}", in the input header`
               );
             }
           }
@@ -315,7 +333,7 @@ export function guardsFromDmnmodeler(
             if (error instanceof UnsupportedFeelError) {
               errorList.push(
                 error.message +
-                  ` in decisiontable with the name "${view.name}", in the output header`
+                ` in decisiontable with the name "${view.name}", in the output header`
               );
             }
           }
@@ -357,7 +375,7 @@ export function guardsFromDmnmodeler(
                 console.log(error.message);
                 errorList.push(
                   error.message +
-                    ` in decisiontable with the name "${view.name}", there is a error in input column ${inputColumn} and row ${rowNumber}`
+                  ` in decisiontable with the name "${view.name}", there is a error in input column ${inputColumn} and row ${rowNumber}`
                 );
               }
             }
@@ -414,7 +432,7 @@ export function guardsFromDmnmodeler(
               if (error instanceof UnsupportedFeelError) {
                 errorList.push(
                   error.message +
-                    ` in decisiontable with the name "${view.name}", there is a error in output column ${outputColumn} and row ${rowNumber}`
+                  ` in decisiontable with the name "${view.name}", there is a error in output column ${outputColumn} and row ${rowNumber}`
                 );
               }
             }
@@ -439,7 +457,9 @@ export function guardsFromDmnmodeler(
           rules: ruleList
         };
 
-        decisionTableList.push(decisionTable);
+
+
+        decisionTableList.set(decisionTableId, decisionTable);
         break;
       }
 

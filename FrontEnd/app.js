@@ -57,17 +57,17 @@ const models = {
 async function init() {
 
   bpmnModeler = new BpmnModeler({
-  container: '#bpmn-canvas',
+    container: '#bpmn-canvas',
 
-  additionalModules: [
-    CustomPaletteProvider,
-    lintModule
-  ],
+    additionalModules: [
+      CustomPaletteProvider,
+      lintModule
+    ],
 
-  linting: {
-    bpmnlint: bpmnlintConfig
-  }
-});
+    linting: {
+      bpmnlint: bpmnlintConfig
+    }
+  });
 
   dmnModeler = new DmnModeler({
     container: '#dmn-canvas',
@@ -190,7 +190,7 @@ async function handleModelChange(htmlElement) {
 
     await openDiagramBPMN(bpmnXml);
     await openDiagramDMN(dmnXml);
-    
+
     // Re-attach right-click handler to new BPMN elements
     rightClickOnBPMN();
 
@@ -295,13 +295,36 @@ function rightClickOnBPMN() {
   });
 }
 
+// async function exportAndConvert() {
+//   const dpn = await bpmnToPn(bpmnModeler, dmnModeler);
+
+//   const xmlString = dpnToPnmlFile(dpn);
+//   downloadXML("dpn.pnml", xmlString);
+// }
+
 async function exportAndConvert() {
-  const dpn = bpmnToPn(bpmnModeler);
+  try {
+    const dpn = await bpmnToPn(bpmnModeler, dmnModeler);
 
-  const xmlString = dpnToPnmlFile(dpn);
-  // downloadXML("dpn.pnml", xmlString);
+    const xmlString = dpnToPnmlFile(dpn);
+
+    downloadXML("dpn.pnml", xmlString);
+  } catch (error) {
+    console.error("Error converting BPMN/DMN to DPN:", error);
+
+    if (error instanceof TranslationError) {
+      alert(formatTranslationError(error));
+      return;
+    }
+
+    if (error instanceof Error) {
+      alert(error.message);
+      return;
+    }
+
+    alert("An unknown error occurred while converting BPMN/DMN to DPN.");
+  }
 }
-
 
 // Function to save the BPMN diagram as XML and trigger conversion
 async function exportAndConvertOLD() {

@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<pnml>
+  <net id="" type="http://www.pnml.org/version-2009/grammar/pnmlcoremodel">
+    <page id="">
+      <place id="source">
+        <name>
+          <text>source</text>
+        </name>
+        <initialMarking>
+          <text>1</text>
+        </initialMarking>
+      </place>
+      <place id="sink">
+        <name>
+          <text>sink</text>
+        </name>
+      </place>
+      <place id="Flow_0wvp74d">
+        <name>
+          <text>Flow_0wvp74d</text>
+        </name>
+      </place>
+      <place id="Flow_1d27afm">
+        <name>
+          <text>Flow_1d27afm</text>
+        </name>
+      </place>
+      <place id="Flow_18bjqx4">
+        <name>
+          <text>Flow_18bjqx4</text>
+        </name>
+      </place>
+      <place id="Flow_1ukciix">
+        <name>
+          <text>Flow_1ukciix</text>
+        </name>
+      </place>
+      <transition id="StartEvent_1">
+        <name>
+          <text />
+        </name>
+      </transition>
+      <transition id="Activity_0iqkqp8">
+        <name>
+          <text>1</text>
+        </name>
+      </transition>
+      <transition id="Activity_15b01dv">
+        <name>
+          <text>2</text>
+        </name>
+      </transition>
+      <transition id="Activity_0g55dij">
+        <name>
+          <text>3</text>
+        </name>
+      </transition>
+      <transition id="Event_1vxnphd">
+        <name>
+          <text />
+        </name>
+      </transition>
+      <arc id="StartEvent_1_Flow_0wvp74d" source="StartEvent_1" target="Flow_0wvp74d">
+        <arctype>
+          <text>normal</text>
+        </arctype>
+      </arc>
+      <arc id="source_StartEvent_1" source="source" target="StartEvent_1">
+        <arctype>
+          <text>normal</text>
+        </arctype>
+      </arc>
+      <arc id="Flow_0wvp74d_Activity_0iqkqp8" source="Flow_0wvp74d" target="Activity_0iqkqp8">
+        <arctype>
+          <text>normal</text>
+        </arctype>
+      </arc>
+      <arc id="Activity_0iqkqp8_Flow_1d27afm" source="Activity_0iqkqp8" target="Flow_1d27afm">
+        <arctype>
+          <text>normal</text>
+        </arctype>
+      </arc>
+      <arc id="Flow_1d27afm_Activity_15b01dv" source="Flow_1d27afm" target="Activity_15b01dv">
+        <arctype>
+          <text>normal</text>
+        </arctype>
+      </arc>
+      <arc id="Activity_15b01dv_Flow_18bjqx4" source="Activity_15b01dv" target="Flow_18bjqx4">
+        <arctype>
+          <text>normal</text>
+        </arctype>
+      </arc>
+      <arc id="Flow_18bjqx4_Activity_0g55dij" source="Flow_18bjqx4" target="Activity_0g55dij">
+        <arctype>
+          <text>normal</text>
+        </arctype>
+      </arc>
+      <arc id="Activity_0g55dij_Flow_1ukciix" source="Activity_0g55dij" target="Flow_1ukciix">
+        <arctype>
+          <text>normal</text>
+        </arctype>
+      </arc>
+      <arc id="Flow_1ukciix_Event_1vxnphd" source="Flow_1ukciix" target="Event_1vxnphd">
+        <arctype>
+          <text>normal</text>
+        </arctype>
+      </arc>
+      <arc id="Event_1vxnphd_sink" source="Event_1vxnphd" target="sink">
+        <arctype>
+          <text>normal</text>
+        </arctype>
+      </arc>
+    </page>
+  </net>
+</pnml>

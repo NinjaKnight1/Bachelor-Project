@@ -1,3 +1,4 @@
+import { VariableTypes } from "../translationOfADA";
 import { DPN } from "./dpn";
 
 function dpnToPnml(dpn: DPN) {
@@ -19,6 +20,14 @@ function dpnToPnml(dpn: DPN) {
   appendPlaces(dpn, doc, page);
   appendTransition(dpn, doc, page);
   appendArcs(dpn, doc, page);
+
+  if (dpn.variables.length > 0) {
+    const variablesDoc = doc.createElement('variables');
+
+    appendVariables(dpn, doc, variablesDoc);
+    net.appendChild(variablesDoc);
+
+  }
 
   return doc;
 }
@@ -49,7 +58,7 @@ function appendTransition(dpn: DPN, doc: XMLDocument, parent: HTMLElement) {
     }
     parent.appendChild(transitionDoc);
 
-    appendTextElement(doc, transitionDoc, transition.name ?? "");
+    appendTextElement(doc, transitionDoc, transition.name ?? " ");
 
 
   });
@@ -64,6 +73,38 @@ function appendArcs(dpn: DPN, doc: XMLDocument, parent: HTMLElement) {
     parent.appendChild(arcDoc);
 
     appendTextElement(doc, arcDoc, 'normal', 'arctype');
+  });
+}
+
+
+function appendVariables(dpn: DPN, doc: XMLDocument, parent: HTMLElement) {
+  dpn.variables.forEach(variable => {
+    const variableDoc = doc.createElement('variable');
+
+    switch (variable.type) {
+      case VariableTypes.string:
+        variableDoc.setAttribute('type', 'java.lang.String');
+
+        break;
+      case VariableTypes.number:
+        variableDoc.setAttribute('maxValue', '100000.0');
+        variableDoc.setAttribute('minValue', '0.0');
+        variableDoc.setAttribute('type', 'java.lang.Double');
+
+        break;
+      case VariableTypes.boolean:
+        variableDoc.setAttribute('type', 'java.lang.Boolean');
+
+        break;
+      default:
+        break;
+    }
+
+    const name = doc.createElement('name');
+    name.textContent = variable.name;
+    variableDoc.appendChild(name);
+    parent.appendChild(variableDoc);
+
   });
 }
 
