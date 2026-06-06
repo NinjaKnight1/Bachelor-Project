@@ -121,8 +121,6 @@ async function bpmnToPn(bpmnModeler: any, dmnModeler: any): Promise<DPN> {
           const exclusiveIncomingIdList = flowToId(flowElement.incoming);
           const exclusiveOutgoingIdList = flowToId(flowElement.outgoing);
           const i = 0;
-          console.log("Exclusive incoming is: " + exclusiveIncomingIdList);
-          console.log("Exclusive outgoing is: " + exclusiveOutgoingIdList);
           const guardsForGateway = gateGuardMap.get(exclusiveId);
           if (exclusiveIncomingIdList.length == 1 && exclusiveOutgoingIdList.length > 1) {
             if (guardsForGateway == undefined) {
@@ -203,7 +201,6 @@ async function bpmnToPn(bpmnModeler: any, dmnModeler: any): Promise<DPN> {
           });
           break;
         default:
-          console.log(flowElement.$type);
           break;
       }
     });

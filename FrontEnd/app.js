@@ -158,7 +158,6 @@ async function handleFileUpload(htmlElement) {
 }
 
 async function handleDownload() {
-  console.log("hej");
   try {
     const { xml: bpmnXml } = await bpmnModeler.saveXML({ format: true });
     const { xml: dmnXml } = await dmnModeler.saveXML({ format: true });

@@ -220,9 +220,7 @@ function guardsFromBpmnmodeler(
     for (const artifact of artifactList) {
       switch (artifact.$type) {
         case 'bpmn:Association': {
-          console.log(artifact)
           const artifactSourceRef = artifact.sourceRef;
-          console.log(artifactSourceRef)
 
           if (artifactSourceRef.sourceRef.$type === 'bpmn:ExclusiveGateway') {
             const gateText = artifact.targetRef.text;
