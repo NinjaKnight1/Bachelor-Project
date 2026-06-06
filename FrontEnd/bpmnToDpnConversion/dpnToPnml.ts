@@ -45,6 +45,10 @@ function appendPlaces(dpn: DPN, doc: XMLDocument, parent: HTMLElement) {
     if (initialMarkings !== undefined) {
       appendTextElement(doc, placeDoc, String(initialMarkings), 'initialMarking');
     }
+    const finalMarkings = dpn.sink.get(place.id);
+    if (finalMarkings !== undefined) {
+      appendTextElement(doc, placeDoc, String(finalMarkings), 'finalMarking');
+    }
   });
 }
 
