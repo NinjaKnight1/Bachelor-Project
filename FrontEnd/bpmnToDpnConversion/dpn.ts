@@ -15,7 +15,7 @@ type Place = {
 type Transition = {
   id: string;
   name: string | null;
-  gaurd: string | null;
+  guard: string | null;
   source: string[];
   target: string[];
   gate: Gateway | null;
@@ -65,12 +65,12 @@ class DPN {
     return id;
   }
 
-  addTransition(id: string, name: string | null, gate: Gateway | null = null, gaurd: string | null = null): string {
+  addTransition(id: string, name: string | null, gate: Gateway | null = null, guard: string | null = null): string {
     if (!this.transitions.has(id)) {
       this.transitions.set(id, {
         id: id,
         name: name,
-        gaurd: gaurd,
+        guard: guard,
         source: [],
         target: [],
         gate: gate

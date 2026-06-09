@@ -167,10 +167,8 @@ export function parseDecisionFromfeelToSmtLib(
   dmnModeler: any
 ): DiagramDecision {
   try {
-    const [decisionTableList, decisionTableVariableNameSet] =
-      guardsFromDmnmodeler(dmnModeler);
-    const [gateGuardList, gateGuardVariableNameSet] =
-      guardsFromBpmnmodeler(bpmnModeler);
+    const [decisionTableList, decisionTableVariableNameSet] = guardsFromDmnmodeler(dmnModeler);
+    const [gateGuardList, gateGuardVariableNameSet] = guardsFromBpmnmodeler(bpmnModeler);
 
     gateGuardVariableNameSet.forEach(name =>
       decisionTableVariableNameSet.add(name)
@@ -244,14 +242,14 @@ function guardsFromBpmnmodeler(
                 pre: translatedGateText,
                 post: 'true'
               };
-              if(guardsExpressionMap.has(sourceId)) {
+              if (guardsExpressionMap.has(sourceId)) {
                 let guardsForSourceIdList = guardsExpressionMap.get(sourceId);
                 if (guardsForSourceIdList == undefined) {
                   guardsForSourceIdList = []
                 }
                 guardsForSourceIdList.push(guard);
                 guardsExpressionMap.set(sourceId, guardsForSourceIdList);
-              }else {
+              } else {
                 guardsExpressionMap.set(sourceId, [guard]);
               }
             } catch (error) {
@@ -393,12 +391,14 @@ export function guardsFromDmnmodeler(
               if (rowNumber === 0) {
                 preCondition = inputRowRule;
               } else {
-                const previousRows = listWithExpression(allInputRows, 'or');
-                const notPreviousRows = negateFormulaAda(previousRows);
-                preCondition = listWithExpression(
-                  [notPreviousRows, inputRowRule],
-                  'and'
-                );
+                // const previousRows = listWithExpression(allInputRows, 'or');
+                // const notPreviousRows = negateFormulaAda(previousRows);
+                // preCondition = listWithExpression(
+                //   [notPreviousRows, inputRowRule],
+                //   'and'
+                // );
+                let tempPreCon = listWithExpression(allInputRows, '||');
+                preCondition = inputRowRule + ' && !' + tempPreCon + '';
               }
               break;
 

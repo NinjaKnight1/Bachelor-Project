@@ -57,8 +57,8 @@ function appendTransition(dpn: DPN, doc: XMLDocument, parent: HTMLElement) {
     const transitionDoc = doc.createElement('transition');
     transitionDoc.setAttribute('id', transition.id);
 
-    if (transition.gaurd !== null) {
-      transitionDoc.setAttribute('gaurd', transition.gaurd);
+    if (transition.guard !== null) {
+      transitionDoc.setAttribute('guard', transition.guard);
     }
     parent.appendChild(transitionDoc);
 
