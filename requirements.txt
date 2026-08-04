@@ -5,3 +5,8 @@ pm4py
 lxml
 graphviz
 python-multipart
+z3
+networkx
+matplotlib
+pyparsing
+cvc5

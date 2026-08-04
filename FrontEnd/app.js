@@ -96,6 +96,8 @@ async function init() {
   document.getElementById('import-dmn').addEventListener("change", handleFileUpload);
   document.getElementById('download-button').addEventListener("click", handleDownload);
 
+  document.getElementById('toggle-background-button').addEventListener("click", toggleBackgroundColor);
+
   document.getElementById('select-model').addEventListener('change', handleModelChange);
 
   // on DMN div
@@ -172,6 +174,15 @@ async function handleDownload() {
   }
 }
 
+
+function toggleBackgroundColor() {
+  const bar = document.getElementById('bottom-bar');
+  if (bar.style.backgroundColor === 'green') {
+    bar.style.backgroundColor = '#4b6e83';
+  } else {
+    bar.style.backgroundColor = 'green';
+  }
+}
 async function handleModelChange(htmlElement) {
   const key = htmlElement.target.value;
 

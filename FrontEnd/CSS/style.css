@@ -1,9 +1,45 @@
 
 .canvas {
-  height: 93vh;
+  height: calc(100vh - 95px);
+  min-height: 420px;
   width: auto;
 }
 
+
+html {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  border: 10px solid #4b6e83;
+  box-sizing: border-box;
+  min-height: 100vh;
+  transition: border-color 0.3s ease;
+}
+
+#main-frame {
+  min-height: 100vh;
+  padding-bottom: 70px;
+}
+
+#bpmn-container {
+  padding: 10px 10px 40px;
+  background: #fff;
+  box-sizing: border-box;
+}
+
+#bottom-bar {
+  position: fixed;
+  left: 0;
+  bottom: 0;
+  width: 100%;
+  height: 30px;
+  background: #4b6e83;
+  transition: background-color 0.3s ease;
+  z-index: 2000;
+}
 .button {
   padding: .4rem .8rem;
   margin-left: 5px;
@@ -39,6 +75,14 @@ select.button-upload option:disabled { color:#d8d8d8; }
 
 .button-download:hover {
   background: #044246;
+}
+
+.button-background {
+  background: #28a745;
+}
+
+.button-background:hover {
+  background: #218838;
 }
 
 #export-button {
