@@ -96,7 +96,7 @@ async function init() {
   document.getElementById('import-dmn').addEventListener("change", handleFileUpload);
   document.getElementById('download-button').addEventListener("click", handleDownload);
 
-  document.getElementById('toggle-background-button').addEventListener("click", toggleBackgroundColor);
+  document.getElementById('toggle-background-button').addEventListener("click", checkPnmlSoundnessAndUpdateBar);
 
   document.getElementById('select-model').addEventListener('change', handleModelChange);
 
@@ -174,13 +174,42 @@ async function handleDownload() {
   }
 }
 
-
-function toggleBackgroundColor() {
+function setBottomBarColor(isSound) {
   const bar = document.getElementById('bottom-bar');
-  if (bar.style.backgroundColor === 'green') {
-    bar.style.backgroundColor = '#4b6e83';
-  } else {
-    bar.style.backgroundColor = 'green';
+  bar.style.backgroundColor = isSound ? 'green' : '#4b6e83';
+}
+
+
+async function buildCurrentPnmlXml() {
+  const dpn = await bpmnToPn(bpmnModeler, dmnModeler);
+  return dpnToPnmlFile(dpn);
+}
+
+async function checkPnmlSoundnessAndUpdateBar() {
+  try {
+    const xmlString = await buildCurrentPnmlXml();
+
+    const response = await fetch('http://localhost:8081/check-soundness-xml', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({ pnml_xml: xmlString, file_name: 'diagram.pnml' })
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to run soundness check');
+    }
+
+    const data = await response.json();
+    setBottomBarColor(Boolean(data.is_sound));
+
+    if (data.is_sound) {
+      alert('The PNML file is sound.');
+    } else {
+      alert('The PNML file is not sound.');
+    }
+  } catch (error) {
+    console.error('Error checking PNML soundness:', error);
+    alert('Soundness check failed. Check the console for details.');
   }
 }
 async function handleModelChange(htmlElement) {
@@ -314,9 +343,7 @@ function rightClickOnBPMN() {
 
 async function exportAndConvert() {
   try {
-    const dpn = await bpmnToPn(bpmnModeler, dmnModeler);
-
-    const xmlString = dpnToPnmlFile(dpn);
+    const xmlString = await buildCurrentPnmlXml();
 
     downloadXML("dpn.pnml", xmlString);
   } catch (error) {

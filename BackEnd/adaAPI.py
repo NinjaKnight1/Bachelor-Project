@@ -7,10 +7,16 @@ import sys
 import runpy
 import io
 import contextlib
+import tempfile
 
 
 class RunRequest(BaseModel):
     args: list[str] = []
+
+
+class SoundnessRequest(BaseModel):
+    pnml_xml: str
+    file_name: str = "diagram.pnml"
 
 app = FastAPI()
 
@@ -131,3 +137,30 @@ async def check_soundness_endpoint(req: RunRequest):
     except Exception as e:
         raise HTTPException(status_code=500, detail=repr(e))
 
+
+@app.post("/check-soundness-xml")
+async def check_soundness_xml_endpoint(req: SoundnessRequest):
+    """Check if a PNML XML payload is data-aware sound."""
+    temp_path = None
+    try:
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".pnml", delete=False, encoding="utf-8") as temp_file:
+            temp_file.write(req.pnml_xml)
+            temp_path = temp_file.name
+
+        is_sound = check_pnml_soundness(temp_path)
+        return {"file": req.file_name, "is_sound": is_sound}
+    except FileNotFoundError as fnf:
+        raise HTTPException(status_code=404, detail=str(fnf))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=repr(e))
+    finally:
+        if temp_path and os.path.exists(temp_path):
+            try:
+                os.remove(temp_path)
+            except OSError:
+                pass
+
+
+if __name__ == "__main__":
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=8082)
