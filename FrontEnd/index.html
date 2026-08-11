@@ -23,6 +23,8 @@
 
       <button id="toggle-background-button" class="button button-background">Check PNML Soundness</button>
 
+      <button id="model-check-button" class="button button-model-check">Model check LTLf</button>
+
       <select id="select-model" class="button button-upload">
         <option value="" disabled selected>Choose a default model</option>
         <option value="default">Default</option>
@@ -52,6 +54,20 @@
   </div>
 
   <div id="bottom-bar" aria-hidden="true"></div>
+
+  <div id="model-check-modal" class="modal" hidden role="dialog" aria-modal="true" aria-labelledby="model-check-title">
+    <div class="modal-content model-check-content">
+      <button id="model-check-close" class="modal-close" type="button" aria-label="Close">×</button>
+      <h2 id="model-check-title">Check an LTLf property</h2>
+      <label for="model-check-property">Property</label>
+      <input id="model-check-property" type="text" placeholder="e.g. F sink" autocomplete="off" />
+      <p class="model-check-help">Use BPMN state names or Boolean variables, for example <code>F sink</code>.</p>
+      <p id="model-check-result" class="model-check-result" role="status"></p>
+      <div class="modal-actions">
+        <button id="model-check-start" class="button button-model-check" type="button">Start model checking</button>
+      </div>
+    </div>
+  </div>
 
   <script src="app.js"></script>
 

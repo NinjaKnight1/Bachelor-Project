@@ -85,6 +85,14 @@ select.button-upload option:disabled { color:#d8d8d8; }
   background: #218838;
 }
 
+.button-model-check {
+  background: #73528d;
+}
+
+.button-model-check:hover {
+  background: #4d2f64;
+}
+
 #export-button {
   background-color: red;
   border-radius: .35rem;
@@ -106,6 +114,10 @@ select.button-upload option:disabled { color:#d8d8d8; }
   z-index: 1000;
 }
 
+.modal[hidden] {
+  display: none;
+}
+
 .modal-content {
   position: relative;
   background: #fff;
@@ -123,6 +135,44 @@ select.button-upload option:disabled { color:#d8d8d8; }
   cursor: pointer;
   font-size: 1.5rem;
   line-height: 1;
+}
+
+.model-check-content {
+  width: min(420px, calc(100vw - 3rem));
+}
+
+.model-check-content h2 {
+  margin-top: 0;
+}
+
+.model-check-content label,
+.model-check-content input {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.model-check-content input {
+  margin-top: .4rem;
+  padding: .55rem;
+}
+
+.model-check-help,
+.model-check-result {
+  font-size: .9rem;
+}
+
+.model-check-result {
+  min-height: 1.2em;
+  margin: 1rem 0;
+}
+
+.model-check-result.success {
+  color: #167231;
+}
+
+.model-check-result.failure {
+  color: #a22020;
 }
 
 .variable-row {

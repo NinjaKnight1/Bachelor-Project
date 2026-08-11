@@ -18,6 +18,7 @@ import { decisionDiagramFromBpmnAndDmn } from './translationOfADA.ts';
 import { TranslationError } from './customErrors.ts';
 import { bpmnToPn } from './bpmnToDpnConversion/dbpmnToDpn.ts';
 import { dpnToPnmlFile } from './bpmnToDpnConversion/dpnToPnml.ts';
+import { dpnToModelChecking, dpnToModelCheckingFile } from './bpmnToDpnConversion/dpnToModelChecking.ts';
 import { variablePanel } from './variablePanel.ts';
 
 import lintModule from 'bpmn-js-bpmnlint';
@@ -97,6 +98,9 @@ async function init() {
   document.getElementById('download-button').addEventListener("click", handleDownload);
 
   document.getElementById('toggle-background-button').addEventListener("click", checkPnmlSoundnessAndUpdateBar);
+  document.getElementById('model-check-button').addEventListener('click', openModelCheckModal);
+  document.getElementById('model-check-close').addEventListener('click', closeModelCheckModal);
+  document.getElementById('model-check-start').addEventListener('click', startModelChecking);
 
   document.getElementById('select-model').addEventListener('change', handleModelChange);
 
@@ -180,6 +184,62 @@ function setBottomBarColor(isSound) {
 }
 
 
+function openModelCheckModal() {
+  const modal = document.getElementById('model-check-modal');
+  const propertyInput = document.getElementById('model-check-property');
+  const result = document.getElementById('model-check-result');
+  result.textContent = '';
+  result.className = 'model-check-result';
+  modal.hidden = false;
+  propertyInput.focus();
+}
+
+function closeModelCheckModal() {
+  document.getElementById('model-check-modal').hidden = true;
+}
+
+async function startModelChecking() {
+  const propertyInput = document.getElementById('model-check-property');
+  const result = document.getElementById('model-check-result');
+  const startButton = document.getElementById('model-check-start');
+  const property = propertyInput.value.trim();
+
+  if (!property) {
+    result.textContent = 'Enter an LTLf property first.';
+    result.className = 'model-check-result failure';
+    propertyInput.focus();
+    return;
+  }
+
+  try {
+    startButton.disabled = true;
+    startButton.textContent = 'Checking…';
+    result.textContent = '';
+    result.className = 'model-check-result';
+    const dpn = await bpmnToPn(bpmnModeler, dmnModeler);
+    const model = dpnToModelChecking(dpn);
+    model.property = property;
+    const response = await fetch('http://localhost:8081/check-model', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({ model, property }),
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.detail || 'Model checking failed.');
+    result.textContent = data.is_satisfied
+      ? 'Property satisfied: ADA found a matching execution.'
+      : 'Property not satisfied: ADA found no matching execution.';
+    result.className = `model-check-result ${data.is_satisfied ? 'success' : 'failure'}`;
+  } catch (error) {
+    console.error('Model checking failed:', error);
+    result.textContent = error instanceof Error ? error.message : 'Model checking failed.';
+    result.className = 'model-check-result failure';
+  } finally {
+    startButton.disabled = false;
+    startButton.textContent = 'Start model checking';
+  }
+}
+
 async function buildCurrentPnmlXml() {
   const dpn = await bpmnToPn(bpmnModeler, dmnModeler);
   return dpnToPnmlFile(dpn);
@@ -253,6 +313,17 @@ function downloadXML(fileName, xml) {
   elementA.click();
   elementA.remove();
 
+  URL.revokeObjectURL(url);
+}
+
+function downloadJSON(fileName, json) {
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const elementA = document.createElement('a');
+  elementA.href = url;
+  elementA.download = fileName;
+  elementA.click();
+  elementA.remove();
   URL.revokeObjectURL(url);
 }
 
@@ -343,9 +414,11 @@ function rightClickOnBPMN() {
 
 async function exportAndConvert() {
   try {
-    const xmlString = await buildCurrentPnmlXml();
+    const dpn = await bpmnToPn(bpmnModeler, dmnModeler);
+    const xmlString = dpnToPnmlFile(dpn);
 
     downloadXML("dpn.pnml", xmlString);
+    downloadJSON("modelChecking.json", dpnToModelCheckingFile(dpn));
   } catch (error) {
     console.error("Error converting BPMN/DMN to DPN:", error);
 
