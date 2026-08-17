@@ -124,7 +124,7 @@ async function bpmnToPn(bpmnModeler: any, dmnModeler: any): Promise<DPN> {
           const guardsForGateway = gateGuardMap.get(exclusiveId);
           if (exclusiveIncomingIdList.length == 1 && exclusiveOutgoingIdList.length > 1) {
             if (guardsForGateway == undefined) {
-              throw new Error("There isn't added gaurd to the exclusive gateway: " + exclusiveName);
+              throw new Error("There isn't added guard to the exclusive gateway: " + exclusiveName);
             }
 
             const inputPlaceId = exclusiveIncomingIdList[0];
