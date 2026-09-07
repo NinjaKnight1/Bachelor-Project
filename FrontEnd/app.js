@@ -1,8 +1,10 @@
 import 'bpmn-js/dist/assets/diagram-js.css';
 import 'bpmn-js/dist/assets/bpmn-js.css';
 import 'bpmn-js/dist/assets/bpmn-font/css/bpmn-embedded.css';
+import '@bpmn-io/properties-panel/assets/properties-panel.css';
 
 import { openTableFromTaskID } from './dmn/dmn.js';
+import dmnFeelMarkersModule from './dmn/dmnFeelMarkersBehavior.ts';
 
 import BpmnModeler from 'bpmn-js/lib/Modeler';
 import DmnModeler from 'dmn-js/lib/Modeler';
@@ -13,16 +15,21 @@ import { is } from 'bpmn-js/lib/util/ModelUtil'; // Utility to check element typ
 import bpmnDiagramXML from '/resources/defaultBpmnDiagram.bpmn';
 import dmnDiagramXML from '/resources/defaultDmnDiagram.dmn';
 import './CSS/style.css';
-import CustomPaletteProvider from './bpmn/customPaletteProvider.js';
+import modifiedPaletteProvider from './bpmn/modifiedPaletteProvider.ts';
+import modelFeelPropertiesProvider from './bpmn/modelFeelPropertiesProvider.ts';
 import { decisionDiagramFromBpmnAndDmn } from './translationOfADA.ts';
 import { TranslationError } from './customErrors.ts';
 import { bpmnToPn } from './bpmnToDpnConversion/dbpmnToDpn.ts';
 import { dpnToPnmlFile } from './bpmnToDpnConversion/dpnToPnml.ts';
 import { dpnToModelChecking, dpnToModelCheckingFile } from './bpmnToDpnConversion/dpnToModelChecking.ts';
 import { variablePanel } from './variablePanel.ts';
+import { BpmnPropertiesPanelModule, BpmnPropertiesProviderModule } from 'bpmn-js-properties-panel';
+import { analyzeModelFeel, isBpmnGatewayConditionAnnotation } from './modelFeelAnalysis.ts';
 
+import { modelFeelAnalysisState } from './modelFeelAnalysisState.ts';
 import lintModule from 'bpmn-js-bpmnlint';
 import 'bpmn-js-bpmnlint/dist/assets/css/bpmn-js-bpmnlint.css';
+import immutableElementIdPropertiesProvider from './bpmn/immutableElementIdPropertiesProvider.ts';
 
 import bpmnlintConfig from '../bundled-config.js';
 
@@ -59,10 +66,17 @@ async function init() {
 
   bpmnModeler = new BpmnModeler({
     container: '#bpmn-canvas',
-
+    propertiesPanel: {
+      parent: '#bpmn-properties-panel'
+    },
     additionalModules: [
-      CustomPaletteProvider,
-      lintModule
+      modifiedPaletteProvider,
+      modelFeelPropertiesProvider,
+      lintModule,
+      immutableElementIdPropertiesProvider,
+      // Properties panel 
+      BpmnPropertiesProviderModule,
+      BpmnPropertiesPanelModule,
     ],
 
     linting: {
@@ -74,6 +88,7 @@ async function init() {
     container: '#dmn-canvas',
     decisionTable: {
       additionalModules: [
+        dmnFeelMarkersModule,
         {
           viewDrd: ['value', null]
         }
@@ -84,8 +99,19 @@ async function init() {
   // Set BPMN + DMN modelers for variable panel
   variablePanel.setModelers(bpmnModeler, dmnModeler);
 
-  await openDiagramBPMN(bpmnDiagramXML);
-  await openDiagramDMN(dmnDiagramXML);
+  await openDiagramBPMN(
+    bpmnDiagramXML,
+    { refreshAnalysis: false }
+  );
+
+  await openDiagramDMN(
+    dmnDiagramXML,
+    { refreshAnalysis: false }
+  );
+
+  refreshModelFeelAnalysis();
+  watchGatewayConditionChanges();
+  watchUserTypeChanges();
 
   rightClickOnBPMN();
 
@@ -108,24 +134,93 @@ async function init() {
   document.getElementById("dmn-back-button").addEventListener("click", () => goBackToBpmn(dmnModeler));
 }
 
-async function openDiagramDMN(xml) {
+async function openDiagramDMN(
+  xml,
+  { refreshAnalysis = true } = {}
+) {
   try {
     await dmnModeler.importXML(xml);
     console.log("DMN loaded.");
     await variablePanel.updateFromDMN();
+
+    if (refreshAnalysis) {
+      refreshModelFeelAnalysis();
+    }
   } catch (err) {
-    console.error('Error loading DMN diagram:', err);
+    console.error(
+      'Error loading DMN diagram:',
+      err
+    );
   }
 }
 
-
-async function openDiagramBPMN(xml) {
+async function openDiagramBPMN(
+  xml,
+  { refreshAnalysis = true } = {}
+) {
   try {
     await bpmnModeler.importXML(xml);
     console.log("BPMN loaded.");
+
+    if (refreshAnalysis) {
+      refreshModelFeelAnalysis();
+    }
   } catch (err) {
-    console.error('Error loading BPMN diagram:', err);
+    console.error(
+      'Error loading BPMN diagram:',
+      err
+    );
   }
+}
+
+function refreshModelFeelAnalysis() {
+  if (!bpmnModeler || !dmnModeler) {
+    return;
+  }
+
+  const result = analyzeModelFeel({
+    bpmnModeler,
+    dmnModeler,
+
+    variableTypes:
+      modelFeelAnalysisState.getUserTypes()
+  });
+
+  modelFeelAnalysisState.setResult(result);
+}
+
+function watchGatewayConditionChanges() {
+  function refreshAfterGatewayConditionChange(
+    event
+  ) {
+    const element = event.context?.element;
+
+    if (
+      !isBpmnGatewayConditionAnnotation(element)
+    ) {
+      return;
+    }
+
+    refreshModelFeelAnalysis();
+  }
+
+  bpmnModeler.on(
+    'commandStack.element.updateLabel.postExecuted',
+    refreshAfterGatewayConditionChange
+  );
+
+  bpmnModeler.on(
+    'commandStack.element.updateLabel.reverted',
+    refreshAfterGatewayConditionChange
+  );
+}
+
+function watchUserTypeChanges() {
+  modelFeelAnalysisState.subscribeUserTypes(
+    () => {
+      refreshModelFeelAnalysis();
+    }
+  );
 }
 
 // Handles the import of files and changes the diagram for dmn or bpmn to the uploaded file
@@ -287,8 +382,17 @@ async function handleModelChange(htmlElement) {
       fetch(dmn).then(r => r.text())
     ]);
 
-    await openDiagramBPMN(bpmnXml);
-    await openDiagramDMN(dmnXml);
+    await openDiagramBPMN(
+      bpmnXml,
+      { refreshAnalysis: false }
+    );
+
+    await openDiagramDMN(
+      dmnXml,
+      { refreshAnalysis: false }
+    );
+
+    refreshModelFeelAnalysis();
 
     // Re-attach right-click handler to new BPMN elements
     rightClickOnBPMN();
@@ -491,15 +595,23 @@ async function exportAndConvertOLD() {
   }
 }
 
-
 export async function goBackToBpmn() {
   try {
-    const { xml: updatedDmnXml } = await dmnModeler.saveXML({ format: true });
+    const { xml: updatedDmnXml } =
+      await dmnModeler.saveXML({ format: true });
+
     await dmnModeler.importXML(updatedDmnXml);
     await variablePanel.updateFromDMN();
 
-    document.getElementById('dmn-container').style.display = 'none';
-    document.getElementById('bpmn-container').style.display = 'block';
+    refreshModelFeelAnalysis();
+
+    document.getElementById(
+      'dmn-container'
+    ).style.display = 'none';
+
+    document.getElementById(
+      'bpmn-container'
+    ).style.display = 'block';
 
     activeTaskId = null;
   } catch (err) {
@@ -507,6 +619,22 @@ export async function goBackToBpmn() {
     alert('Failed to save DMN. Check the console for details.');
   }
 }
+
+// export async function goBackToBpmn() {
+//   try {
+//     const { xml: updatedDmnXml } = await dmnModeler.saveXML({ format: true });
+//     await dmnModeler.importXML(updatedDmnXml);
+//     await variablePanel.updateFromDMN();
+
+//     document.getElementById('dmn-container').style.display = 'none';
+//     document.getElementById('bpmn-container').style.display = 'block';
+
+//     activeTaskId = null;
+//   } catch (err) {
+//     console.error('Error saving DMN:', err);
+//     alert('Failed to save DMN. Check the console for details.');
+//   }
+// }
 
 
 init();

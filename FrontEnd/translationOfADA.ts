@@ -5,7 +5,7 @@ import { UnsupportedFeelError, TranslationError } from './customErrors';
 const DecisionTableType = 'decisionTable';
 const ErrorNode = '⚠';
 
-enum ParseType {
+export enum ParseType {
   Unary,
   Expression
 }
@@ -473,7 +473,7 @@ export function guardsFromDmnmodeler(
   return [decisionTableList, variableNameSet];
 }
 
-function translateFeelToSmtLib(
+export function translateFeelToSmtLib(
   expression: string,
   parseType: ParseType,
   headerExpression: string = ''
@@ -520,6 +520,31 @@ function walkTree(
       const result = walkTree(cursor, expression, variableNameSet);
       cursor.parent();
       return result;
+    }
+    case 'Conjunction':
+    case 'Disjunction': {
+      const operator =
+        cursor.node.type.name === 'Conjunction'
+          ? '&&'
+          : '||';
+
+      const operands: string[] = [];
+
+      cursor.firstChild();
+
+      do {
+        const nodeType: string = cursor.node.type.name;
+
+        if (nodeType !== 'and' && nodeType !== 'or') {
+          operands.push(
+            walkTree(cursor, expression, variableNameSet)
+          );
+        }
+      } while (cursor.nextSibling());
+
+      cursor.parent();
+
+      return '(' + operands.join(` ${operator} `) + ')';
     }
 
     case 'Comparison':
