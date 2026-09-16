@@ -127,7 +127,14 @@ async function init() {
   document.getElementById('import-dmn').addEventListener("change", handleFileUpload);
   document.getElementById('download-button').addEventListener("click", handleDownload);
 
-  document.getElementById('toggle-background-button').addEventListener("click", checkPnmlSoundnessAndUpdateBar);
+  const soundnessButton = document.getElementById('toggle-background-button');
+  soundnessButton.addEventListener("click", () => {
+    soundnessButton.disabled = true;
+    setTimeout(() => {
+      soundnessButton.disabled = false;
+    }, 2000);
+    checkPnmlSoundnessAndUpdateBar();
+  });
   document.getElementById('model-check-button').addEventListener('click', openModelCheckModal);
   document.getElementById('model-check-close').addEventListener('click', closeModelCheckModal);
   document.getElementById('model-check-start').addEventListener('click', startModelChecking);
