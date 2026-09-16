@@ -391,14 +391,14 @@ export function guardsFromDmnmodeler(
               if (rowNumber === 0) {
                 preCondition = inputRowRule;
               } else {
-                // const previousRows = listWithExpression(allInputRows, 'or');
-                // const notPreviousRows = negateFormulaAda(previousRows);
-                // preCondition = listWithExpression(
-                //   [notPreviousRows, inputRowRule],
-                //   'and'
-                // );
-                let tempPreCon = listWithExpression(allInputRows, '||');
-                preCondition = inputRowRule + ' && !' + tempPreCon + '';
+                const previousRows = listWithExpression(allInputRows, 'or');
+                const notPreviousRows = negateFormulaAda(previousRows);
+                preCondition = listWithExpression(
+                  [notPreviousRows, inputRowRule],
+                  'and'
+                );
+                // let tempPreCon = listWithExpression(allInputRows, '||');
+                // preCondition = inputRowRule + ' && !' + tempPreCon + '';
               }
               break;
 
