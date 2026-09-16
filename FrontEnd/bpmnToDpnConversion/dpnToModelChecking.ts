@@ -19,7 +19,13 @@ type ModelCheckingTransition = {
 type ModelCheckingVariable = {
   name: string;
   initial: string | number | boolean;
-  type: 'bool' | 'rat' | 'int';
+  type: 'bool' | 'rat' | 'string';
+};
+
+type ModelCheckingConstant = {
+  name: string;
+  domain: [];
+  range: 'string';
 };
 
 export type ModelCheckingModel = {
@@ -28,6 +34,8 @@ export type ModelCheckingModel = {
   transitions: ModelCheckingTransition[];
   variables: ModelCheckingVariable[];
   property: string;
+  functions?: ModelCheckingConstant[];
+  facts?: string;
 };
 
 function markingKey(marking: Set<string>): string {
@@ -47,24 +55,93 @@ function variablesWrittenBy(guard: string | null, variableNames: string[]): stri
   });
 }
 
-function adaStringValues(dpn: DPN): Map<string, number> {
-  const values = new Map<string, number>();
-  const quotedValue = /"((?:\\.|[^"\\])*)"/g;
+class AdaStringRegistry {
+  private readonly symbols = new Map<string, string>();
+  private prefix: string | undefined;
 
-  // ADA represents FEEL string literals as integer constants in the order it
-  // encounters them while parsing transition guards.
-  dpn.transitions.forEach(transition => {
-    if (!transition.guard) return;
-    for (const match of transition.guard.matchAll(quotedValue)) {
-      const value = match[1].replace(/\\"/g, '"');
-      if (!values.has(value)) values.set(value, values.size);
+  constructor(private readonly reservedNames: string[]) {}
+
+  register(value: string): string {
+    const existing = this.symbols.get(value);
+    if (existing !== undefined) return existing;
+
+    if (this.prefix === undefined) {
+      const candidates = [
+        'feel_string_',
+        ...Array.from(
+          '_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ',
+          letter => `${letter}_feel_string_`,
+        ),
+      ];
+
+      // ADA's parser can consume a variable-name prefix before
+      // recognizing a constant. Avoid prefix collisions as well.
+      this.prefix = candidates.find(candidate =>
+        this.reservedNames.every(name =>
+          !candidate.startsWith(name) && !name.startsWith(candidate),
+        ),
+      );
+
+      if (this.prefix === undefined) {
+        throw new Error(
+          'Cannot generate ADA string constants without identifier conflicts.',
+        );
+      }
     }
-  });
-  return values;
+
+    const symbol = `${this.prefix}${this.symbols.size}`;
+    this.symbols.set(value, symbol);
+    return symbol;
+  }
+
+  encodeExpression(expression: string): string {
+    const encoded = expression.replace(
+      /"(?:\\.|[^"\\])*"/g,
+      literal => {
+        let value: unknown;
+
+        try {
+          value = JSON.parse(literal);
+        } catch {
+          throw new Error(`Invalid string literal: ${literal}`);
+        }
+
+        if (typeof value !== 'string') {
+          throw new Error(`Expected a string literal: ${literal}`);
+        }
+
+        return this.register(value);
+      },
+    );
+
+    if (encoded.includes('"')) {
+      throw new Error('Unterminated string literal in ADA expression.');
+    }
+
+    return encoded;
+  }
+
+  declarations(): ModelCheckingConstant[] {
+    return [...this.symbols.values()].map(name => ({
+      name,
+      domain: [],
+      range: 'string',
+    }));
+  }
+
+  distinctness(): string | undefined {
+    const names = [...this.symbols.values()];
+
+    return names.length > 1
+      ? `distinct(${names.join(', ')})`
+      : undefined;
+  }
 }
 
-function modelCheckingVariables(dpn: DPN): ModelCheckingVariable[] {
-  const stringValues = adaStringValues(dpn);
+function modelCheckingVariables(
+  dpn: DPN,
+  strings: AdaStringRegistry,
+): ModelCheckingVariable[] {
   return dpn.variables.map(variable => {
     if (variable.type === VariableTypes.boolean) {
       return { name: variable.name, initial: variable.value.trim().toLowerCase() === 'true', type: 'bool' };
@@ -73,13 +150,19 @@ function modelCheckingVariables(dpn: DPN): ModelCheckingVariable[] {
       const initial = Number(variable.value);
       return { name: variable.name, initial: Number.isFinite(initial) ? initial : 0, type: 'rat' };
     }
-    const initial = stringValues.get(variable.value);
-    return { name: variable.name, initial: initial ?? 0, type: 'int' };
+    return {
+      name: variable.name,
+      initial: strings.register(variable.value),
+      type: 'string',
+    };
   });
 }
 
 /** Converts a DPN into ADA's model-checking/DDS JSON format. */
-export function dpnToModelChecking(dpn: DPN): ModelCheckingModel {
+export function dpnToModelChecking(
+  dpn: DPN,
+  property: string = 'F sink',
+): ModelCheckingModel {
   const incomingPlaces = new Map<string, string[]>();
   const outgoingPlaces = new Map<string, string[]>();
   dpn.transitions.forEach(transition => {
@@ -136,12 +219,34 @@ export function dpnToModelChecking(dpn: DPN): ModelCheckingModel {
     });
   }
 
+  const strings = new AdaStringRegistry([
+    ...variableNames,
+    ...states.map(state => state.name),
+  ]);
+
+  const variables = modelCheckingVariables(dpn, strings);
+
+  const encodedTransitions = transitions.map(transition => {
+    if (transition.guard === undefined) return transition;
+
+    return {
+      ...transition,
+      guard: strings.encodeExpression(transition.guard),
+    };
+  });
+
+  const encodedProperty = strings.encodeExpression(property);
+  const functions = strings.declarations();
+  const facts = strings.distinctness();
+
   return {
     name: 'BPMN/DMN model',
     states,
-    transitions,
-    variables: modelCheckingVariables(dpn),
-    property: 'F sink',
+    transitions: encodedTransitions,
+    variables,
+    property: encodedProperty,
+    ...(functions.length > 0 ? { functions } : {}),
+    ...(facts !== undefined ? { facts } : {}),
   };
 }
 

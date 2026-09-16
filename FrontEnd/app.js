@@ -19,7 +19,11 @@ import modifiedPaletteProvider from './bpmn/modifiedPaletteProvider.ts';
 import modelFeelPropertiesProvider from './bpmn/modelFeelPropertiesProvider.ts';
 import { decisionDiagramFromBpmnAndDmn } from './translationOfADA.ts';
 import { TranslationError } from './customErrors.ts';
-import { bpmnToPn } from './bpmnToDpnConversion/dbpmnToDpn.ts';
+import {
+  buildDpnForConversion,
+  formatConversionError
+} from './modelConversion.ts';
+import { ConversionPurpose } from './conversionPreflight.ts';
 import { dpnToPnmlFile } from './bpmnToDpnConversion/dpnToPnml.ts';
 import { dpnToModelChecking, dpnToModelCheckingFile } from './bpmnToDpnConversion/dpnToModelChecking.ts';
 import { variablePanel } from './variablePanel.ts';
@@ -97,7 +101,7 @@ async function init() {
   });
 
   // Set BPMN + DMN modelers for variable panel
-  variablePanel.setModelers(bpmnModeler, dmnModeler);
+  // variablePanel.setModelers(bpmnModeler, dmnModeler);
 
   await openDiagramBPMN(
     bpmnDiagramXML,
@@ -187,6 +191,15 @@ function refreshModelFeelAnalysis() {
   });
 
   modelFeelAnalysisState.setResult(result);
+}
+
+function buildCurrentDpn(purpose) {
+  return buildDpnForConversion({
+    bpmnModeler,
+    dmnModeler,
+    state: modelFeelAnalysisState,
+    purpose
+  });
 }
 
 function watchGatewayConditionChanges() {
@@ -311,13 +324,15 @@ async function startModelChecking() {
     startButton.textContent = 'Checking…';
     result.textContent = '';
     result.className = 'model-check-result';
-    const dpn = await bpmnToPn(bpmnModeler, dmnModeler);
-    const model = dpnToModelChecking(dpn);
-    model.property = property;
+    const dpn = await buildCurrentDpn(ConversionPurpose.ModelChecking);
+    const model = dpnToModelChecking(dpn, property);
     const response = await fetch('http://localhost:8081/check-model', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-      body: JSON.stringify({ model, property }),
+      body: JSON.stringify({
+        model,
+        property: model.property,
+      }),
     });
     const data = await response.json();
     if (!response.ok) throw new Error(data.detail || 'Model checking failed.');
@@ -327,7 +342,7 @@ async function startModelChecking() {
     result.className = `model-check-result ${data.is_satisfied ? 'success' : 'failure'}`;
   } catch (error) {
     console.error('Model checking failed:', error);
-    result.textContent = error instanceof Error ? error.message : 'Model checking failed.';
+    result.textContent = formatConversionError(error);
     result.className = 'model-check-result failure';
   } finally {
     startButton.disabled = false;
@@ -336,7 +351,7 @@ async function startModelChecking() {
 }
 
 async function buildCurrentPnmlXml() {
-  const dpn = await bpmnToPn(bpmnModeler, dmnModeler);
+  const dpn = await buildCurrentDpn(ConversionPurpose.Pnml);
   return dpnToPnmlFile(dpn);
 }
 
@@ -364,7 +379,7 @@ async function checkPnmlSoundnessAndUpdateBar() {
     }
   } catch (error) {
     console.error('Error checking PNML soundness:', error);
-    alert('Soundness check failed. Check the console for details.');
+    alert(formatConversionError(error));
   }
 }
 async function handleModelChange(htmlElement) {
@@ -518,25 +533,15 @@ function rightClickOnBPMN() {
 
 async function exportAndConvert() {
   try {
-    const dpn = await bpmnToPn(bpmnModeler, dmnModeler);
+    const dpn = await buildCurrentDpn(ConversionPurpose.ModelChecking);
     const xmlString = dpnToPnmlFile(dpn);
+    const modelJson = dpnToModelCheckingFile(dpn);
 
     downloadXML("dpn.pnml", xmlString);
-    downloadJSON("modelChecking.json", dpnToModelCheckingFile(dpn));
+    downloadJSON("modelChecking.json", modelJson);
   } catch (error) {
     console.error("Error converting BPMN/DMN to DPN:", error);
-
-    if (error instanceof TranslationError) {
-      alert(formatTranslationError(error));
-      return;
-    }
-
-    if (error instanceof Error) {
-      alert(error.message);
-      return;
-    }
-
-    alert("An unknown error occurred while converting BPMN/DMN to DPN.");
+    alert(formatConversionError(error));
   }
 }
 
