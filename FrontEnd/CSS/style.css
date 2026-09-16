@@ -182,9 +182,31 @@ select.button-upload option:disabled {
   padding: .55rem;
 }
 
+.model-check-content code,
+#model-check-property {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+}
+
 .model-check-help,
 .model-check-result {
   font-size: .9rem;
+}
+
+.model-check-help p {
+  margin: .75rem 0;
+}
+
+.model-check-examples-title {
+  font-weight: 600;
+}
+
+.model-check-examples {
+  margin: 0;
+  padding-left: 1.25rem;
+}
+
+.model-check-examples li {
+  margin: .35rem 0;
 }
 
 .model-check-result {

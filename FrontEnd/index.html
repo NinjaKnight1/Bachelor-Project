@@ -24,7 +24,7 @@
 
       <button id="download-button" class="button button-download">Download BPMN and DMN</button>
 
-      <button id="toggle-background-button" class="button button-background">Check PNML Soundness</button>
+      <button id="toggle-background-button" class="button button-background">Check Soundness</button>
 
       <button id="model-check-button" class="button button-model-check">Model check LTLf</button>
 
@@ -64,7 +64,16 @@
       <h2 id="model-check-title">Check an LTLf property</h2>
       <label for="model-check-property">Property</label>
       <input id="model-check-property" type="text" placeholder="e.g. F sink" autocomplete="off" />
-      <p class="model-check-help">Use BPMN state names or Boolean variables, for example <code>F sink</code>.</p>
+      <div class="model-check-help">
+        <p>Use <code>F</code> for “eventually”, <code>sink</code> for process completion, and the variables from your diagram.</p>
+        <p class="model-check-examples-title">Examples</p>
+        <ul class="model-check-examples">
+          <li><code>F sink</code> — a completed execution exists.</li>
+          <li><code>F (Confirm == true)</code> — <code>Confirm</code> can become true.</li>
+          <li><code>F (Clothing == "Winter Jacket")</code> — the specified value can be assigned.</li>
+          <li><code>F (sink &amp;&amp; (Confirm == true))</code> — the process can finish with <code>Confirm</code> true.</li>
+        </ul>
+      </div>
       <p id="model-check-result" class="model-check-result" role="status"></p>
       <div class="modal-actions">
         <button id="model-check-start" class="button button-model-check" type="button">Start model checking</button>

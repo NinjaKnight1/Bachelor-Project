@@ -288,7 +288,7 @@ async function handleDownload() {
 
 function setBottomBarColor(isSound) {
   const bar = document.getElementById('bottom-bar');
-  bar.style.backgroundColor = isSound ? 'green' : '#4b6e83';
+  bar.style.backgroundColor = isSound ? 'green' : '#ff2129';
 }
 
 
@@ -371,12 +371,6 @@ async function checkPnmlSoundnessAndUpdateBar() {
 
     const data = await response.json();
     setBottomBarColor(Boolean(data.is_sound));
-
-    if (data.is_sound) {
-      alert('The PNML file is sound.');
-    } else {
-      alert('The PNML file is not sound.');
-    }
   } catch (error) {
     console.error('Error checking PNML soundness:', error);
     alert(formatConversionError(error));
