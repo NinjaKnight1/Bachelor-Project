@@ -291,6 +291,14 @@ function setBottomBarColor(isSound) {
   bar.style.backgroundColor = isSound ? 'green' : '#ff2129';
 }
 
+function setBottomBarLoadingColor() {
+  document.getElementById('bottom-bar').style.backgroundColor = 'purple';
+}
+
+function resetBottomBarColor() {
+  document.getElementById('bottom-bar').style.backgroundColor = '';
+}
+
 
 function openModelCheckModal() {
   const modal = document.getElementById('model-check-modal');
@@ -357,6 +365,7 @@ async function buildCurrentPnmlXml() {
 
 async function checkPnmlSoundnessAndUpdateBar() {
   try {
+    setBottomBarLoadingColor();
     const xmlString = await buildCurrentPnmlXml();
 
     const response = await fetch('http://localhost:8081/check-soundness-xml', {
@@ -372,6 +381,7 @@ async function checkPnmlSoundnessAndUpdateBar() {
     const data = await response.json();
     setBottomBarColor(Boolean(data.is_sound));
   } catch (error) {
+    resetBottomBarColor();
     console.error('Error checking PNML soundness:', error);
     alert(formatConversionError(error));
   }
