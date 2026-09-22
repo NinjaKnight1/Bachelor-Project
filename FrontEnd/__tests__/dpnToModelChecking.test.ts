@@ -31,16 +31,16 @@ describe('DPN model-checking export', () => {
       transitions: [
         { source: 0, target: 1, name: 'Start', written: [] },
         { source: 1, target: 2, name: 'Decide', guard: "(approved' == true)", written: ['approved'] },
-        { source: 1, target: 2, name: 'Describe', guard: '(weather == feel_string_0)', written: [] },
+        { source: 1, target: 2, name: 'Describe', guard: '(weather == string_Cold_0)', written: [] },
       ],
       variables: [
         { name: 'approved', initial: false, type: 'bool' },
         { name: 'amount', initial: 42, type: 'rat' },
-        { name: 'weather', initial: 'feel_string_0', type: 'string' },
+        { name: 'weather', initial: 'string_Cold_0', type: 'string' },
       ],
       property: 'F sink',
       functions: [
-        { name: 'feel_string_0', domain: [], range: 'string' },
+        { name: 'string_Cold_0', domain: [], range: 'string' },
       ],
     });
   });
@@ -74,19 +74,19 @@ describe('ADA symbolic strings', () => {
     const model = dpnToModelChecking(dpn);
 
     expect(model.variables).toEqual([
-      { name: 'Clothing', type: 'string', initial: 'feel_string_0' },
+      { name: 'Clothing', type: 'string', initial: 'string_stra_0' },
       { name: 'Confirm', type: 'bool', initial: true },
       { name: 'Num', type: 'rat', initial: 2 },
-      { name: 'Weather', type: 'string', initial: 'feel_string_1' },
+      { name: 'Weather', type: 'string', initial: 'string_stj_1' },
     ]);
 
     expect(model.functions).toEqual([
-      { name: 'feel_string_0', domain: [], range: 'string' },
-      { name: 'feel_string_1', domain: [], range: 'string' },
+      { name: 'string_stra_0', domain: [], range: 'string' },
+      { name: 'string_stj_1', domain: [], range: 'string' },
     ]);
 
     expect(model.facts).toBe(
-      'distinct(feel_string_0, feel_string_1)',
+      'distinct(string_stra_0, string_stj_1)',
     );
   });
 
@@ -100,23 +100,23 @@ describe('ADA symbolic strings', () => {
     );
 
     expect(model.transitions[0].guard).toBe(
-      "(Weather == feel_string_0) && (Weather' == feel_string_1)",
+      "(Weather == string_stj_0) && (Weather' == string_Sunny_1)",
     );
 
     expect(model.transitions[0].written).toEqual(['Weather']);
 
     expect(model.property).toBe(
-      'F ((Weather == feel_string_1) || (Weather == feel_string_2))',
+      'F ((Weather == string_Sunny_1) || (Weather == string_Rainy_2))',
     );
 
     expect(model.functions).toEqual([
-      { name: 'feel_string_0', domain: [], range: 'string' },
-      { name: 'feel_string_1', domain: [], range: 'string' },
-      { name: 'feel_string_2', domain: [], range: 'string' },
+      { name: 'string_stj_0', domain: [], range: 'string' },
+      { name: 'string_Sunny_1', domain: [], range: 'string' },
+      { name: 'string_Rainy_2', domain: [], range: 'string' },
     ]);
 
     expect(model.facts).toBe(
-      'distinct(feel_string_0, feel_string_1, feel_string_2)',
+      'distinct(string_stj_0, string_Sunny_1, string_Rainy_2)',
     );
 
     expect(dpn.transitions.get('change')?.guard).toBe(guard);
@@ -134,11 +134,38 @@ describe('ADA symbolic strings', () => {
     );
 
     expect(model.transitions[0].guard).toBe(
-      'Weather == feel_string_0',
+      'Weather == string_He_said_hello_goodbye_0',
     );
-    expect(model.property).toBe('F (Weather == feel_string_0)');
+    expect(model.property).toBe('F (Weather == string_He_said_hello_goodbye_0)');
     expect(model.functions).toHaveLength(1);
     expect(model).not.toHaveProperty('facts');
+  });
+
+  it('creates readable names without merging different text values', () => {
+    const dpn = createModel(
+      'hej',
+      '(Weather == "T-Shirt") || (Weather == "T Shirt")',
+    );
+
+    const model = dpnToModelChecking(dpn, 'F (Weather == "hej")');
+
+    expect(model.variables[0].initial).toBe('string_hej_0');
+
+    expect(model.transitions[0].guard).toBe(
+      '(Weather == string_T_Shirt_1) || (Weather == string_T_Shirt_2)',
+    );
+
+    expect(model.property).toBe('F (Weather == string_hej_0)');
+
+    expect(model.functions).toEqual([
+      { name: 'string_hej_0', domain: [], range: 'string' },
+      { name: 'string_T_Shirt_1', domain: [], range: 'string' },
+      { name: 'string_T_Shirt_2', domain: [], range: 'string' },
+    ]);
+
+    expect(model.facts).toBe(
+      'distinct(string_hej_0, string_T_Shirt_1, string_T_Shirt_2)',
+    );
   });
 
   it('omits string declarations when there are no string values', () => {
@@ -149,7 +176,7 @@ describe('ADA symbolic strings', () => {
     expect(model).not.toHaveProperty('facts');
   });
 
-  it.each(['feel', 'feel_string_0'])(
+  it.each(['string', 'string_Sunny_0'])(
     'avoids collisions with variable %s',
     name => {
       const dpn = new DPN();
@@ -163,8 +190,8 @@ describe('ADA symbolic strings', () => {
         `F (${name} == "Sunny")`,
       );
 
-      expect(model.variables[0].initial).toBe('_feel_string_0');
-      expect(model.property).toBe(`F (${name} == _feel_string_0)`);
+      expect(model.variables[0].initial).toBe('_string_Sunny_0');
+      expect(model.property).toBe(`F (${name} == _string_Sunny_0)`);
     },
   );
 

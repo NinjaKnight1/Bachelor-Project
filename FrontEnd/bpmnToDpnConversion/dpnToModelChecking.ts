@@ -67,10 +67,11 @@ class AdaStringRegistry {
 
     if (this.prefix === undefined) {
       const candidates = [
-        'feel_string_',
+        'string_',
+        '_string_',
         ...Array.from(
-          '_abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ',
-          letter => `${letter}_feel_string_`,
+          'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ',
+          letter => `${letter}_string_`,
         ),
       ];
 
@@ -89,7 +90,11 @@ class AdaStringRegistry {
       }
     }
 
-    const symbol = `${this.prefix}${this.symbols.size}`;
+    const readableValue = value
+      .replace(/[^A-Za-z0-9_]+/g, '_')
+      .replace(/^_+|_+$/g, '') || 'value';
+
+    const symbol = `${this.prefix}${readableValue}_${this.symbols.size}`;
     this.symbols.set(value, symbol);
     return symbol;
   }
