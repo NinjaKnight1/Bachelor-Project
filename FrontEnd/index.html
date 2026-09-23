@@ -59,10 +59,18 @@
       </div>
     </div> -->
 
-    <footer class="footer"></footer>
   </div>
 
   <div id="bottom-bar" aria-hidden="true"></div>
+
+  <dialog id="soundness-result-dialog" aria-labelledby="soundness-result-title">
+    <h2 id="soundness-result-title"></h2>
+    <h3 class="soundness-explanation-heading">Explanation</h3>
+    <pre id="soundness-result-explanation"></pre>
+    <form method="dialog">
+      <button class="button" autofocus>Close</button>
+    </form>
+  </dialog>
 
   <div id="model-check-modal" class="modal" hidden role="dialog" aria-modal="true" aria-labelledby="model-check-title">
     <div class="modal-content model-check-content">
