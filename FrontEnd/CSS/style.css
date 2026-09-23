@@ -188,7 +188,9 @@ select.button-upload option:disabled {
 }
 
 .model-check-content {
-  width: min(420px, calc(100vw - 3rem));
+  width: min(600px, calc(100vw - 3rem));
+  min-width: 0;
+  box-sizing: border-box;
 }
 
 .model-check-content h2 {
@@ -245,6 +247,23 @@ select.button-upload option:disabled {
 
 .model-check-result.failure {
   color: #a22020;
+}
+
+#model-check-explanation summary {
+  margin: 1rem 0 .5rem;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+#model-check-output {
+  margin: 0;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco,
+    Consolas, "Liberation Mono", monospace;
+  font-size: 14px;
+  line-height: 1.5;
 }
 
 .variable-row {

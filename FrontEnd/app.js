@@ -309,12 +309,25 @@ function resetBottomBarColor() {
 }
 
 
+function setModelCheckExplanation(output) {
+  const section = document.getElementById('model-check-explanation');
+  const text = document.getElementById('model-check-output');
+
+  text.textContent = output;
+  section.hidden = !output;
+
+  if (!output) {
+    section.open = false;
+  }
+}
+
 function openModelCheckModal() {
   const modal = document.getElementById('model-check-modal');
   const propertyInput = document.getElementById('model-check-property');
   const result = document.getElementById('model-check-result');
   result.textContent = '';
   result.className = 'model-check-result';
+  setModelCheckExplanation('');
   modal.hidden = false;
   propertyInput.focus();
 }
@@ -328,6 +341,7 @@ async function startModelChecking() {
   const result = document.getElementById('model-check-result');
   const startButton = document.getElementById('model-check-start');
   const property = propertyInput.value.trim();
+  setModelCheckExplanation('');
 
   if (!property) {
     result.textContent = 'Enter an LTLf property first.';
@@ -357,6 +371,11 @@ async function startModelChecking() {
       ? 'Property satisfied: ADA found a matching execution.'
       : 'Property not satisfied: ADA found no matching execution.';
     result.className = `model-check-result ${data.is_satisfied ? 'success' : 'failure'}`;
+    setModelCheckExplanation(
+      typeof data.output === 'string' && data.output.trim()
+        ? data.output
+        : 'ADA returned no explanation.',
+    );
   } catch (error) {
     console.error('Model checking failed:', error);
     result.textContent = formatConversionError(error);
