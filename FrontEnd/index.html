@@ -59,10 +59,18 @@
       </div>
     </div> -->
 
-    <footer class="footer"></footer>
   </div>
 
   <div id="bottom-bar" aria-hidden="true"></div>
+
+  <dialog id="soundness-result-dialog" aria-labelledby="soundness-result-title">
+    <h2 id="soundness-result-title"></h2>
+    <h3 class="soundness-explanation-heading">Explanation</h3>
+    <pre id="soundness-result-explanation"></pre>
+    <form method="dialog">
+      <button class="button" autofocus>Close</button>
+    </form>
+  </dialog>
 
   <div id="model-check-modal" class="modal" hidden role="dialog" aria-modal="true" aria-labelledby="model-check-title">
     <div class="modal-content model-check-content">
@@ -71,16 +79,23 @@
       <label for="model-check-property">Property</label>
       <input id="model-check-property" type="text" placeholder="e.g. F sink" autocomplete="off" />
       <div class="model-check-help">
-        <p>Use <code>F</code> for “eventually”, <code>sink</code> for process completion, and the variables from your diagram.</p>
+        <p>Use <code>F</code> for “eventually”, <code>sink</code> for process completion, and the variables from your
+          diagram.</p>
         <p class="model-check-examples-title">Examples</p>
         <ul class="model-check-examples">
           <li><code>F sink</code> — a completed execution exists.</li>
           <li><code>F (Confirm != true)</code> — <code>Confirm</code> can be false.</li>
           <li><code>F (Clothing == "Winter Jacket")</code> — the specified value can be assigned.</li>
-          <li><code>F (sink &amp;&amp; (Confirm == true))</code> — the process can finish with <code>Confirm</code> true.</li>
+          <li><code>F (sink &amp;&amp; (Confirm == true))</code> — the process can finish with <code>Confirm</code>
+            true.</li>
         </ul>
+        <p>More help can be found at <a href="https://ltl.adatool.dev/?p=help" target="_blank" rel="noopener noreferrer">ADA help</a></p>
       </div>
       <p id="model-check-result" class="model-check-result" role="status"></p>
+      <details id="model-check-explanation" hidden>
+        <summary>Explanation</summary>
+        <pre id="model-check-output"></pre>
+      </details>
       <div class="modal-actions">
         <button id="model-check-start" class="button button-model-check" type="button">Start model checking</button>
       </div>

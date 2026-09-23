@@ -1,3 +1,4 @@
+from soundness_result import summarize_soundness
 import os
 from fastapi import FastAPI, UploadFile, File, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
@@ -101,28 +102,14 @@ def run_ada_script(args: list[str]):
     return result
 
 
-def check_pnml_soundness(pnml_file: str) -> bool:
-    """
-    Check if a PNML file is data-aware sound using ADA.
-    """
+def check_pnml_soundness(pnml_file: str) -> dict:
     if not os.path.isfile(pnml_file):
-        raise FileNotFoundError(f"PNML file not found: {pnml_file}")
-    
+        raise FileNotFoundError(
+            f"PNML file not found: {pnml_file}"
+        )
+
     result = run_ada_script(["-m", pnml_file, "-s"])
-    
-    if result["exception"]:
-        raise Exception(f"ADA soundness check failed: {result['exception']}")
-    
-    # Parse output to determine soundness
-    # ADA prints: "<name> is data-aware sound" or "<name> is not data-aware sound"
-    stdout = result["stdout"]
-    stderr = result["stderr"]
-    output = stdout + stderr
-    
-    # Check if the output indicates the model is sound
-    is_sound = "is data-aware sound" in output and "is not data-aware sound" not in output
-    
-    return is_sound
+    return summarize_soundness(result)
 
 
 @app.post("/convert/")
@@ -264,8 +251,8 @@ async def check_soundness_xml_endpoint(req: SoundnessRequest):
             temp_file.write(req.pnml_xml)
             temp_path = temp_file.name
 
-        is_sound = check_pnml_soundness(temp_path)
-        return {"file": req.file_name, "is_sound": is_sound}
+        result = check_pnml_soundness(temp_path)
+        return {"file": req.file_name, **result}
     except FileNotFoundError as fnf:
         print(f"FileNotFoundError: {fnf}")
         raise HTTPException(status_code=404, detail=str(fnf))

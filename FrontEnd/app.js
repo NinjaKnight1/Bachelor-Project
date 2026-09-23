@@ -128,14 +128,13 @@ async function init() {
   document.getElementById('import-dmn').addEventListener("change", handleFileUpload);
   document.getElementById('download-button').addEventListener("click", handleDownload);
 
-  const soundnessButton = document.getElementById('toggle-background-button');
-  soundnessButton.addEventListener("click", () => {
-    soundnessButton.disabled = true;
-    setTimeout(() => {
-      soundnessButton.disabled = false;
-    }, 2000);
-    checkPnmlSoundnessAndUpdateBar();
-  });
+  const soundnessButton = document.getElementById(
+    'toggle-background-button',
+  );
+  soundnessButton.addEventListener(
+    'click',
+    checkPnmlSoundnessAndUpdateBar,
+  );
   document.getElementById('model-check-button').addEventListener('click', openModelCheckModal);
   document.getElementById('model-check-close').addEventListener('click', closeModelCheckModal);
   document.getElementById('model-check-start').addEventListener('click', startModelChecking);
@@ -173,6 +172,7 @@ async function openDiagramBPMN(
 ) {
   try {
     await bpmnModeler.importXML(xml);
+    modelFeelAnalysisState.clearProcessInputs();
     console.log("BPMN loaded.");
 
     if (refreshAnalysis) {
@@ -309,12 +309,25 @@ function resetBottomBarColor() {
 }
 
 
+function setModelCheckExplanation(output) {
+  const section = document.getElementById('model-check-explanation');
+  const text = document.getElementById('model-check-output');
+
+  text.textContent = output;
+  section.hidden = !output;
+
+  if (!output) {
+    section.open = false;
+  }
+}
+
 function openModelCheckModal() {
   const modal = document.getElementById('model-check-modal');
   const propertyInput = document.getElementById('model-check-property');
   const result = document.getElementById('model-check-result');
   result.textContent = '';
   result.className = 'model-check-result';
+  setModelCheckExplanation('');
   modal.hidden = false;
   propertyInput.focus();
 }
@@ -328,6 +341,7 @@ async function startModelChecking() {
   const result = document.getElementById('model-check-result');
   const startButton = document.getElementById('model-check-start');
   const property = propertyInput.value.trim();
+  setModelCheckExplanation('');
 
   if (!property) {
     result.textContent = 'Enter an LTLf property first.';
@@ -357,6 +371,11 @@ async function startModelChecking() {
       ? 'Property satisfied: ADA found a matching execution.'
       : 'Property not satisfied: ADA found no matching execution.';
     result.className = `model-check-result ${data.is_satisfied ? 'success' : 'failure'}`;
+    setModelCheckExplanation(
+      typeof data.output === 'string' && data.output.trim()
+        ? data.output
+        : 'ADA returned no explanation.',
+    );
   } catch (error) {
     console.error('Model checking failed:', error);
     result.textContent = formatConversionError(error);
@@ -373,27 +392,51 @@ async function buildCurrentPnmlXml() {
 }
 
 async function checkPnmlSoundnessAndUpdateBar() {
-  try {
-    setBottomBarLoadingColor();
-    const xmlString = await buildCurrentPnmlXml();
-
-    const response = await fetch('http://localhost:8081/check-soundness-xml', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
-      body: JSON.stringify({ pnml_xml: xmlString, file_name: 'diagram.pnml' })
-    });
-
-    if (!response.ok) {
-      throw new Error('Failed to run soundness check');
-    }
-
-    const data = await response.json();
-    setBottomBarColor(Boolean(data.is_sound));
-  } catch (error) {
-    resetBottomBarColor();
-    console.error('Error checking PNML soundness:', error);
-    alert(formatConversionError(error));
-  }
+  await runSoundnessCheck({
+    button: document.getElementById('toggle-background-button'),
+    bar: document.getElementById('bottom-bar'),
+    request: async () => {
+      const xmlString = await buildCurrentPnmlXml();
+      const response = await fetch(
+        'http://localhost:8081/check-soundness-xml',
+        {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+          },
+          body: JSON.stringify({
+            pnml_xml: xmlString,
+            file_name: 'diagram.pnml',
+          }),
+        },
+      );
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(
+          typeof data.detail === 'string'
+            ? data.detail
+            : 'The server could not complete the soundness check.',
+        );
+      }
+      return data;
+    },
+    showResult: result => {
+      document.getElementById(
+        'soundness-result-title',
+      ).textContent = result.message;
+      document.getElementById(
+        'soundness-result-explanation',
+      ).textContent = result.explanation;
+      const dialog = document.getElementById(
+        'soundness-result-dialog',
+      );
+      if (!dialog.open) {
+        dialog.showModal();
+      }
+    },
+    formatError: formatConversionError,
+  });
 }
 async function handleModelChange(htmlElement) {
   const key = htmlElement.target.value;
