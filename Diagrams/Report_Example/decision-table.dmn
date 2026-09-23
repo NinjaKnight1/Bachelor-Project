@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <definitions xmlns="https://www.omg.org/spec/DMN/20191111/MODEL/" xmlns:dmndi="https://www.omg.org/spec/DMN/20191111/DMNDI/" xmlns:biodi="http://bpmn.io/schema/dmn/biodi/2.0" xmlns:dc="http://www.omg.org/spec/DMN/20191111/DC/" xmlns:di="http://www.omg.org/spec/DMN/20191111/DI/" id="definitions" name="definitions" namespace="http://camunda.org/schema/1.0/dmn">
   <decision id="Activity_1dfjj35" name="find recipe">
-    <decisionTable id="Activity_1dfjj35_decisionTable">
+    <decisionTable id="Activity_1dfjj35_decisionTable" hitPolicy="FIRST">
       <input id="Activity_1dfjj35_inputClause" label="Suggested Recipe">
         <inputExpression id="Activity_1dfjj35_inputExpression" typeRef="string">
           <text>suggestedRecipe</text>
@@ -29,6 +29,14 @@
           <text>"Lentil Soup"</text>
         </inputEntry>
         <outputEntry id="LiteralExpression_059shzf">
+          <text>false</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_1u58x1l">
+        <inputEntry id="UnaryTests_1utrm8e">
+          <text>-</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_0oygrwv">
           <text>false</text>
         </outputEntry>
       </rule>
@@ -100,6 +108,17 @@
         </inputEntry>
         <outputEntry id="LiteralExpression_00uats7">
           <text>"Sushi"</text>
+        </outputEntry>
+      </rule>
+      <rule id="DecisionRule_1idgazy">
+        <inputEntry id="UnaryTests_052mgq8">
+          <text>-</text>
+        </inputEntry>
+        <inputEntry id="UnaryTests_17vwwse">
+          <text>-</text>
+        </inputEntry>
+        <outputEntry id="LiteralExpression_0n28ooa">
+          <text>"Oats"</text>
         </outputEntry>
       </rule>
     </decisionTable>
