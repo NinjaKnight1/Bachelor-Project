@@ -64,6 +64,12 @@ function appendTransition(dpn: DPN, doc: XMLDocument, parent: HTMLElement) {
 
     appendTextElement(doc, transitionDoc, transition.name ?? " ");
 
+    transition.writtenVariables.forEach(variableName => {
+      const writeVariable = doc.createElement('writeVariable');
+      writeVariable.textContent = variableName;
+      transitionDoc.appendChild(writeVariable);
+    });
+
 
   });
 }

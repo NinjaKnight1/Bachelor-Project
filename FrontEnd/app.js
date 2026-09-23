@@ -1,8 +1,11 @@
+import { runSoundnessCheck } from './soundnessResult.ts';
 import 'bpmn-js/dist/assets/diagram-js.css';
 import 'bpmn-js/dist/assets/bpmn-js.css';
 import 'bpmn-js/dist/assets/bpmn-font/css/bpmn-embedded.css';
+import '@bpmn-io/properties-panel/assets/properties-panel.css';
 
 import { openTableFromTaskID } from './dmn/dmn.js';
+import dmnFeelMarkersModule from './dmn/dmnFeelMarkersBehavior.ts';
 
 import BpmnModeler from 'bpmn-js/lib/Modeler';
 import DmnModeler from 'dmn-js/lib/Modeler';
@@ -13,15 +16,25 @@ import { is } from 'bpmn-js/lib/util/ModelUtil'; // Utility to check element typ
 import bpmnDiagramXML from '/resources/defaultBpmnDiagram.bpmn';
 import dmnDiagramXML from '/resources/defaultDmnDiagram.dmn';
 import './CSS/style.css';
-import CustomPaletteProvider from './bpmn/customPaletteProvider.js';
+import modifiedPaletteProvider from './bpmn/modifiedPaletteProvider.ts';
+import modelFeelPropertiesProvider from './bpmn/modelFeelPropertiesProvider.ts';
 import { decisionDiagramFromBpmnAndDmn } from './translationOfADA.ts';
 import { TranslationError } from './customErrors.ts';
-import { bpmnToPn } from './bpmnToDpnConversion/dbpmnToDpn.ts';
+import {
+  buildDpnForConversion,
+  formatConversionError
+} from './modelConversion.ts';
+import { ConversionPurpose } from './conversionPreflight.ts';
 import { dpnToPnmlFile } from './bpmnToDpnConversion/dpnToPnml.ts';
+import { dpnToModelChecking, dpnToModelCheckingFile } from './bpmnToDpnConversion/dpnToModelChecking.ts';
 import { variablePanel } from './variablePanel.ts';
+import { BpmnPropertiesPanelModule, BpmnPropertiesProviderModule } from 'bpmn-js-properties-panel';
+import { analyzeModelFeel, isBpmnGatewayConditionAnnotation } from './modelFeelAnalysis.ts';
 
+import { modelFeelAnalysisState } from './modelFeelAnalysisState.ts';
 import lintModule from 'bpmn-js-bpmnlint';
 import 'bpmn-js-bpmnlint/dist/assets/css/bpmn-js-bpmnlint.css';
+import immutableElementIdPropertiesProvider from './bpmn/immutableElementIdPropertiesProvider.ts';
 
 import bpmnlintConfig from '../bundled-config.js';
 
@@ -58,10 +71,17 @@ async function init() {
 
   bpmnModeler = new BpmnModeler({
     container: '#bpmn-canvas',
-
+    propertiesPanel: {
+      parent: '#bpmn-properties-panel'
+    },
     additionalModules: [
-      CustomPaletteProvider,
-      lintModule
+      modifiedPaletteProvider,
+      modelFeelPropertiesProvider,
+      lintModule,
+      immutableElementIdPropertiesProvider,
+      // Properties panel 
+      BpmnPropertiesProviderModule,
+      BpmnPropertiesPanelModule,
     ],
 
     linting: {
@@ -73,6 +93,7 @@ async function init() {
     container: '#dmn-canvas',
     decisionTable: {
       additionalModules: [
+        dmnFeelMarkersModule,
         {
           viewDrd: ['value', null]
         }
@@ -81,10 +102,21 @@ async function init() {
   });
 
   // Set BPMN + DMN modelers for variable panel
-  variablePanel.setModelers(bpmnModeler, dmnModeler);
+  // variablePanel.setModelers(bpmnModeler, dmnModeler);
 
-  await openDiagramBPMN(bpmnDiagramXML);
-  await openDiagramDMN(dmnDiagramXML);
+  await openDiagramBPMN(
+    bpmnDiagramXML,
+    { refreshAnalysis: false }
+  );
+
+  await openDiagramDMN(
+    dmnDiagramXML,
+    { refreshAnalysis: false }
+  );
+
+  refreshModelFeelAnalysis();
+  watchGatewayConditionChanges();
+  watchUserTypeChanges();
 
   rightClickOnBPMN();
 
@@ -96,7 +128,17 @@ async function init() {
   document.getElementById('import-dmn').addEventListener("change", handleFileUpload);
   document.getElementById('download-button').addEventListener("click", handleDownload);
 
-  document.getElementById('toggle-background-button').addEventListener("click", checkPnmlSoundnessAndUpdateBar);
+  const soundnessButton = document.getElementById('toggle-background-button');
+  soundnessButton.addEventListener("click", () => {
+    soundnessButton.disabled = true;
+    setTimeout(() => {
+      soundnessButton.disabled = false;
+    }, 2000);
+    checkPnmlSoundnessAndUpdateBar();
+  });
+  document.getElementById('model-check-button').addEventListener('click', openModelCheckModal);
+  document.getElementById('model-check-close').addEventListener('click', closeModelCheckModal);
+  document.getElementById('model-check-start').addEventListener('click', startModelChecking);
 
   document.getElementById('select-model').addEventListener('change', handleModelChange);
 
@@ -104,24 +146,103 @@ async function init() {
   document.getElementById("dmn-back-button").addEventListener("click", () => goBackToBpmn(dmnModeler));
 }
 
-async function openDiagramDMN(xml) {
+async function openDiagramDMN(
+  xml,
+  { refreshAnalysis = true } = {}
+) {
   try {
     await dmnModeler.importXML(xml);
+    modelFeelAnalysisState.clearProcessInputs();
     console.log("DMN loaded.");
     await variablePanel.updateFromDMN();
+
+    if (refreshAnalysis) {
+      refreshModelFeelAnalysis();
+    }
   } catch (err) {
-    console.error('Error loading DMN diagram:', err);
+    console.error(
+      'Error loading DMN diagram:',
+      err
+    );
   }
 }
 
-
-async function openDiagramBPMN(xml) {
+async function openDiagramBPMN(
+  xml,
+  { refreshAnalysis = true } = {}
+) {
   try {
     await bpmnModeler.importXML(xml);
     console.log("BPMN loaded.");
+
+    if (refreshAnalysis) {
+      refreshModelFeelAnalysis();
+    }
   } catch (err) {
-    console.error('Error loading BPMN diagram:', err);
+    console.error(
+      'Error loading BPMN diagram:',
+      err
+    );
   }
+}
+
+function refreshModelFeelAnalysis() {
+  if (!bpmnModeler || !dmnModeler) {
+    return;
+  }
+
+  const result = analyzeModelFeel({
+    bpmnModeler,
+    dmnModeler,
+
+    variableTypes:
+      modelFeelAnalysisState.getUserTypes()
+  });
+
+  modelFeelAnalysisState.setResult(result);
+}
+
+function buildCurrentDpn(purpose) {
+  return buildDpnForConversion({
+    bpmnModeler,
+    dmnModeler,
+    state: modelFeelAnalysisState,
+    purpose
+  });
+}
+
+function watchGatewayConditionChanges() {
+  function refreshAfterGatewayConditionChange(
+    event
+  ) {
+    const element = event.context?.element;
+
+    if (
+      !isBpmnGatewayConditionAnnotation(element)
+    ) {
+      return;
+    }
+
+    refreshModelFeelAnalysis();
+  }
+
+  bpmnModeler.on(
+    'commandStack.element.updateLabel.postExecuted',
+    refreshAfterGatewayConditionChange
+  );
+
+  bpmnModeler.on(
+    'commandStack.element.updateLabel.reverted',
+    refreshAfterGatewayConditionChange
+  );
+}
+
+function watchUserTypeChanges() {
+  modelFeelAnalysisState.subscribeUserTypes(
+    () => {
+      refreshModelFeelAnalysis();
+    }
+  );
 }
 
 // Handles the import of files and changes the diagram for dmn or bpmn to the uploaded file
@@ -176,17 +297,84 @@ async function handleDownload() {
 
 function setBottomBarColor(isSound) {
   const bar = document.getElementById('bottom-bar');
-  bar.style.backgroundColor = isSound ? 'green' : '#4b6e83';
+  bar.style.backgroundColor = isSound ? 'green' : '#ff2129';
+}
+
+function setBottomBarLoadingColor() {
+  document.getElementById('bottom-bar').style.backgroundColor = 'purple';
+}
+
+function resetBottomBarColor() {
+  document.getElementById('bottom-bar').style.backgroundColor = '';
 }
 
 
+function openModelCheckModal() {
+  const modal = document.getElementById('model-check-modal');
+  const propertyInput = document.getElementById('model-check-property');
+  const result = document.getElementById('model-check-result');
+  result.textContent = '';
+  result.className = 'model-check-result';
+  modal.hidden = false;
+  propertyInput.focus();
+}
+
+function closeModelCheckModal() {
+  document.getElementById('model-check-modal').hidden = true;
+}
+
+async function startModelChecking() {
+  const propertyInput = document.getElementById('model-check-property');
+  const result = document.getElementById('model-check-result');
+  const startButton = document.getElementById('model-check-start');
+  const property = propertyInput.value.trim();
+
+  if (!property) {
+    result.textContent = 'Enter an LTLf property first.';
+    result.className = 'model-check-result failure';
+    propertyInput.focus();
+    return;
+  }
+
+  try {
+    startButton.disabled = true;
+    startButton.textContent = 'Checking…';
+    result.textContent = '';
+    result.className = 'model-check-result';
+    const dpn = await buildCurrentDpn(ConversionPurpose.ModelChecking);
+    const model = dpnToModelChecking(dpn, property);
+    const response = await fetch('http://localhost:8081/check-model', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+      body: JSON.stringify({
+        model,
+        property: model.property,
+      }),
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.detail || 'Model checking failed.');
+    result.textContent = data.is_satisfied
+      ? 'Property satisfied: ADA found a matching execution.'
+      : 'Property not satisfied: ADA found no matching execution.';
+    result.className = `model-check-result ${data.is_satisfied ? 'success' : 'failure'}`;
+  } catch (error) {
+    console.error('Model checking failed:', error);
+    result.textContent = formatConversionError(error);
+    result.className = 'model-check-result failure';
+  } finally {
+    startButton.disabled = false;
+    startButton.textContent = 'Start model checking';
+  }
+}
+
 async function buildCurrentPnmlXml() {
-  const dpn = await bpmnToPn(bpmnModeler, dmnModeler);
+  const dpn = await buildCurrentDpn(ConversionPurpose.Pnml);
   return dpnToPnmlFile(dpn);
 }
 
 async function checkPnmlSoundnessAndUpdateBar() {
   try {
+    setBottomBarLoadingColor();
     const xmlString = await buildCurrentPnmlXml();
 
     const response = await fetch('http://localhost:8081/check-soundness-xml', {
@@ -201,15 +389,10 @@ async function checkPnmlSoundnessAndUpdateBar() {
 
     const data = await response.json();
     setBottomBarColor(Boolean(data.is_sound));
-
-    if (data.is_sound) {
-      alert('The PNML file is sound.');
-    } else {
-      alert('The PNML file is not sound.');
-    }
   } catch (error) {
+    resetBottomBarColor();
     console.error('Error checking PNML soundness:', error);
-    alert('Soundness check failed. Check the console for details.');
+    alert(formatConversionError(error));
   }
 }
 async function handleModelChange(htmlElement) {
@@ -227,8 +410,17 @@ async function handleModelChange(htmlElement) {
       fetch(dmn).then(r => r.text())
     ]);
 
-    await openDiagramBPMN(bpmnXml);
-    await openDiagramDMN(dmnXml);
+    await openDiagramBPMN(
+      bpmnXml,
+      { refreshAnalysis: false }
+    );
+
+    await openDiagramDMN(
+      dmnXml,
+      { refreshAnalysis: false }
+    );
+
+    refreshModelFeelAnalysis();
 
     // Re-attach right-click handler to new BPMN elements
     rightClickOnBPMN();
@@ -253,6 +445,17 @@ function downloadXML(fileName, xml) {
   elementA.click();
   elementA.remove();
 
+  URL.revokeObjectURL(url);
+}
+
+function downloadJSON(fileName, json) {
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const elementA = document.createElement('a');
+  elementA.href = url;
+  elementA.download = fileName;
+  elementA.click();
+  elementA.remove();
   URL.revokeObjectURL(url);
 }
 
@@ -343,23 +546,20 @@ function rightClickOnBPMN() {
 
 async function exportAndConvert() {
   try {
-    const xmlString = await buildCurrentPnmlXml();
+    const checkingDpn = await buildCurrentDpn(
+      ConversionPurpose.ModelChecking,
+    );
+    const pnmlDpn = await buildCurrentDpn(
+      ConversionPurpose.Pnml,
+    );
+    const xmlString = dpnToPnmlFile(pnmlDpn);
+    const modelJson = dpnToModelCheckingFile(checkingDpn);
 
     downloadXML("dpn.pnml", xmlString);
+    downloadJSON("modelChecking.json", modelJson);
   } catch (error) {
     console.error("Error converting BPMN/DMN to DPN:", error);
-
-    if (error instanceof TranslationError) {
-      alert(formatTranslationError(error));
-      return;
-    }
-
-    if (error instanceof Error) {
-      alert(error.message);
-      return;
-    }
-
-    alert("An unknown error occurred while converting BPMN/DMN to DPN.");
+    alert(formatConversionError(error));
   }
 }
 
@@ -418,15 +618,23 @@ async function exportAndConvertOLD() {
   }
 }
 
-
 export async function goBackToBpmn() {
   try {
-    const { xml: updatedDmnXml } = await dmnModeler.saveXML({ format: true });
+    const { xml: updatedDmnXml } =
+      await dmnModeler.saveXML({ format: true });
+
     await dmnModeler.importXML(updatedDmnXml);
     await variablePanel.updateFromDMN();
 
-    document.getElementById('dmn-container').style.display = 'none';
-    document.getElementById('bpmn-container').style.display = 'block';
+    refreshModelFeelAnalysis();
+
+    document.getElementById(
+      'dmn-container'
+    ).style.display = 'none';
+
+    document.getElementById(
+      'bpmn-container'
+    ).style.display = 'grid';
 
     activeTaskId = null;
   } catch (err) {
@@ -434,6 +642,22 @@ export async function goBackToBpmn() {
     alert('Failed to save DMN. Check the console for details.');
   }
 }
+
+// export async function goBackToBpmn() {
+//   try {
+//     const { xml: updatedDmnXml } = await dmnModeler.saveXML({ format: true });
+//     await dmnModeler.importXML(updatedDmnXml);
+//     await variablePanel.updateFromDMN();
+
+//     document.getElementById('dmn-container').style.display = 'none';
+//     document.getElementById('bpmn-container').style.display = 'block';
+
+//     activeTaskId = null;
+//   } catch (err) {
+//     console.error('Error saving DMN:', err);
+//     alert('Failed to save DMN. Check the console for details.');
+//   }
+// }
 
 
 init();

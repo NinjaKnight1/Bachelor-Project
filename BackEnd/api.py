@@ -9,6 +9,7 @@ import runpy
 import io
 import contextlib
 import tempfile
+import json as json_module
 
 from replace import split_pnml_element, split_gateway, add_variables_from_json_to_pnml, set_ada_markings
 from json_mani import business_task_list_json, _Xor_gatewayRules
@@ -20,6 +21,11 @@ from fastapi.staticfiles import StaticFiles
 class SoundnessRequest(BaseModel):
     pnml_xml: str
     file_name: str = "diagram.pnml"
+
+
+class ModelCheckingRequest(BaseModel):
+    model: dict
+    property: str
 
 
 app = FastAPI()
@@ -268,6 +274,42 @@ async def check_soundness_xml_endpoint(req: SoundnessRequest):
         import traceback
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=repr(e))
+    finally:
+        if temp_path and os.path.exists(temp_path):
+            try:
+                os.remove(temp_path)
+            except OSError:
+                pass
+
+
+@app.post("/check-model")
+async def check_model_endpoint(req: ModelCheckingRequest):
+    """Run ADA's LTLf model checker on a browser-generated model."""
+    property_string = req.property.strip()
+    if not property_string:
+        raise HTTPException(status_code=400, detail="An LTLf property is required.")
+
+    temp_path = None
+    try:
+        model = dict(req.model)
+        model["property"] = property_string
+        with tempfile.NamedTemporaryFile(mode="w", suffix=".json", delete=False, encoding="utf-8") as temp_file:
+            json_module.dump(model, temp_file)
+            temp_path = temp_file.name
+
+        result = run_ada_script(["-m", temp_path, "-p", property_string])
+        output = result["stdout"] + result["stderr"]
+        if result["exception"] or result["return_code"] != 0:
+            raise RuntimeError(result["exception"] or output or "ADA model checker failed.")
+
+        return {
+            "is_satisfied": "Product automaton admits witness:" in output,
+            "output": output,
+        }
+    except FileNotFoundError as fnf:
+        raise HTTPException(status_code=404, detail=str(fnf))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
     finally:
         if temp_path and os.path.exists(temp_path):
             try:

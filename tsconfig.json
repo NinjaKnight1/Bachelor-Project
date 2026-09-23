@@ -5,8 +5,8 @@
     "strict": true,
     "moduleResolution": "bundler",
     "esModuleInterop": true,
-    // "skipLibCheck": true
+    "skipLibCheck": true,
     "allowUnreachableCode": false
   },
-  "include": ["FrontEnd/*", "bundled-config.js", "FrontEnd/__tests__/testModulesTypes.d.ts"]
+  "include": ["FrontEnd/**/*", "bundled-config.js"]
 }

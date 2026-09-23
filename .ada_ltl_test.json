@@ -1,0 +1,15 @@
+{
+  "name": "test",
+  "states": [
+    {"id": 0, "name": "s0", "initial": true},
+    {"id": 1, "name": "s1", "final": true}
+  ],
+  "transitions": [
+    {"source": 0, "target": 1, "guard": "((suggestedRecipe' == \"Veggie Stir-fry\") && (desired' == true))"}
+  ],
+  "variables": [
+    {"name": "suggestedRecipe", "type": "string", "initial": ""},
+    {"name": "desired", "type": "bool", "initial": false}
+  ],
+  "property": "F (desired == true)"
+}

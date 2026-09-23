@@ -1,13 +1,13 @@
 import BpmnModeler from 'bpmn-js/lib/Modeler';
 import { DPN, Gateway } from './dpn';
 import { decisionDiagramFromBpmnAndDmn, DiagramDecision, DecisionTable, GateGuards, Variable } from '../translationOfADA';
-import { variablePanel } from '../variablePanel';
 
-async function bpmnToPn(bpmnModeler: any, dmnModeler: any): Promise<DPN> {
-  await variablePanel.updateFromDMN();
-  const variableList = variablePanel.getVariables();
-
-  // TODO: Check if all variables have a value.
+async function bpmnToPn(
+  bpmnModeler: any,
+  dmnModeler: any,
+  variables: Variable[],
+  processInputs: readonly string[] = [],
+): Promise<DPN> {
 
   const diagramDecision: DiagramDecision = decisionDiagramFromBpmnAndDmn(
     bpmnModeler,
@@ -19,7 +19,7 @@ async function bpmnToPn(bpmnModeler: any, dmnModeler: any): Promise<DPN> {
 
   let dpn = new DPN();
 
-  dpn.variables = variableList;
+  dpn.variables = variables;
 
   let definitions = bpmnModeler.getDefinitions()
   let diagramList = definitions.diagrams;
@@ -94,7 +94,7 @@ async function bpmnToPn(bpmnModeler: any, dmnModeler: any): Promise<DPN> {
           const startId = flowElement.id;
           const startName = flowElement.name ?? null;
 
-          dpn.addTransition(startId, startName);
+          dpn.addTransition(startId, startName, null, null, processInputs);
 
           const startOutgoingIdList = flowToId(flowElement.outgoing);
           startOutgoingIdList.forEach(outgoingId => {

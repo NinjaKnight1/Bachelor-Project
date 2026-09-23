@@ -19,6 +19,7 @@ type Transition = {
   source: string[];
   target: string[];
   gate: Gateway | null;
+  writtenVariables: string[];
 };
 
 type Arc = {
@@ -65,16 +66,23 @@ class DPN {
     return id;
   }
 
-  addTransition(id: string, name: string | null, gate: Gateway | null = null, guard: string | null = null): string {
+  addTransition(
+    id: string,
+    name: string | null,
+    gate: Gateway | null = null,
+    guard: string | null = null,
+    writtenVariables: readonly string[] = [],
+  ): string {
     if (!this.transitions.has(id)) {
       this.transitions.set(id, {
         id: id,
-        name: name,
-        guard: guard,
+        name,
+        guard,
         source: [],
         target: [],
-        gate: gate
-      })
+        gate,
+        writtenVariables: [...new Set(writtenVariables)],
+      });
     }
     return id;
   }

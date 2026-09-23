@@ -8,37 +8,48 @@
 <body>
   <div id="main-frame">
     <div id="bpmn-container">
+      <div id="bpmn-workspace">
 
-      <div class="canvas" id="bpmn-canvas"></div>
+        <div class="canvas" id="bpmn-canvas"></div>
+        <div id="bpmn-properties-panel"></div>
+      </div>
 
-      <button id="export-button" class="button button-export">Export and Convert</button>
+      <div class="editor-toolbar">
+        <button id="export-button" class="button button-export">Export and Convert</button>
 
-      <input id="import-bpmn" type="file" accept=".bpmn" hidden>
-      <label class="button button-upload" for="import-bpmn">Upload BPMN</label>
+        <input id="import-bpmn" type="file" accept=".bpmn" hidden>
+        <label class="button button-upload" for="import-bpmn">Upload BPMN</label>
 
-      <input id="import-dmn" type="file" accept=".dmn" hidden />
-      <label class="button button-upload" for="import-dmn">Upload DMN</label>
+        <input id="import-dmn" type="file" accept=".dmn" hidden />
+        <label class="button button-upload" for="import-dmn">Upload DMN</label>
 
-      <button id="download-button" class="button button-download">Download BPMN and DMN</button>
+        <button id="download-button" class="button button-download">Download BPMN and DMN</button>
 
-      <button id="toggle-background-button" class="button button-background">Check PNML Soundness</button>
+        <button id="toggle-background-button" class="button button-background">Check Soundness</button>
 
-      <select id="select-model" class="button button-upload">
-        <option value="" disabled selected>Choose a default model</option>
-        <option value="default">Default</option>
-        <option value="takeaway">Takeaway example</option>
-        <option value="parallel">Parallel example</option>
-        <option value="exclusive">Exclusive example</option>
-      </select>
+        <button id="model-check-button" class="button button-model-check">Model check LTLf</button>
+
+        <select id="select-model" class="button button-upload">
+          <option value="" disabled selected>Choose a default model</option>
+          <option value="default">Default</option>
+          <option value="takeaway">Takeaway example</option>
+          <option value="parallel">Parallel example</option>
+          <option value="exclusive">Exclusive example</option>
+        </select>
+      </div>
 
     </div>
 
     <div id="dmn-container" style="display: none;">
       <div class="canvas" id="dmn-canvas"></div>
-      <button class="button" id="dmn-back-button">Back to BPMN</button>
+      <div class="editor-toolbar">
+        <button class="button" id="dmn-back-button">
+          Back to BPMN
+        </button>
+      </div>
     </div>
 
-    <div id="variable-panel" class="variable-panel">
+    <!-- <div id="variable-panel" class="variable-panel">
       <div class="variable-panel-header">
         <button id="variable-toggle" class="variable-toggle">Variables ▼</button>
         <button id="variable-reload" class="variable-reload" title="Reload variables from DMN">↻</button>
@@ -46,12 +57,35 @@
       <div id="variable-content" class="variable-content">
         <div id="variables-list" class="variables-list"></div>
       </div>
-    </div>
+    </div> -->
 
     <footer class="footer"></footer>
   </div>
 
   <div id="bottom-bar" aria-hidden="true"></div>
+
+  <div id="model-check-modal" class="modal" hidden role="dialog" aria-modal="true" aria-labelledby="model-check-title">
+    <div class="modal-content model-check-content">
+      <button id="model-check-close" class="modal-close" type="button" aria-label="Close">×</button>
+      <h2 id="model-check-title">Check an LTLf property</h2>
+      <label for="model-check-property">Property</label>
+      <input id="model-check-property" type="text" placeholder="e.g. F sink" autocomplete="off" />
+      <div class="model-check-help">
+        <p>Use <code>F</code> for “eventually”, <code>sink</code> for process completion, and the variables from your diagram.</p>
+        <p class="model-check-examples-title">Examples</p>
+        <ul class="model-check-examples">
+          <li><code>F sink</code> — a completed execution exists.</li>
+          <li><code>F (Confirm != true)</code> — <code>Confirm</code> can be false.</li>
+          <li><code>F (Clothing == "Winter Jacket")</code> — the specified value can be assigned.</li>
+          <li><code>F (sink &amp;&amp; (Confirm == true))</code> — the process can finish with <code>Confirm</code> true.</li>
+        </ul>
+      </div>
+      <p id="model-check-result" class="model-check-result" role="status"></p>
+      <div class="modal-actions">
+        <button id="model-check-start" class="button button-model-check" type="button">Start model checking</button>
+      </div>
+    </div>
+  </div>
 
   <script src="app.js"></script>
 
