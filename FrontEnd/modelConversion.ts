@@ -6,7 +6,7 @@ import {
 import type { ModelFeelAnalysisState } from './modelFeelAnalysisState';
 import {
   prepareConversionVariables,
-  type ConversionPurpose
+  ConversionPurpose
 } from './conversionPreflight';
 import {
   formatModelFeelError,
@@ -21,7 +21,7 @@ interface ConversionOptions {
   dmnModeler: DmnModelerLike;
   state: Pick<
     ModelFeelAnalysisState,
-    'getUserTypes' | 'getInitialValues' | 'setResult'
+    'getUserTypes' | 'getInitialValues' | 'getProcessInputs' | 'setResult'
   >;
   purpose: ConversionPurpose;
 }
@@ -63,7 +63,21 @@ export async function buildDpnForConversion({
     throw new ConversionValidationError(prepared.errors);
   }
 
-  return bpmnToPn(bpmnModeler, dmnModeler, prepared.variables);
+  const variableNames = new Set(
+    prepared.variables.map(variable => variable.name),
+  );
+
+  const processInputs =
+    purpose === ConversionPurpose.Pnml
+      ? state.getProcessInputs().filter(name => variableNames.has(name))
+      : [];
+
+  return bpmnToPn(
+    bpmnModeler,
+    dmnModeler,
+    prepared.variables,
+    processInputs,
+  );
 }
 
 export function formatConversionError(error: unknown): string {

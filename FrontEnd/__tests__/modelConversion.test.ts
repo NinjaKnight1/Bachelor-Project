@@ -61,6 +61,27 @@ function setup() {
 }
 
 describe('model conversion', () => {
+  test.each([
+    [ConversionPurpose.Pnml, ['amount']],
+    [ConversionPurpose.ModelChecking, []],
+  ])(
+    'passes startup inputs according to purpose: %s',
+    async (purpose, expectedInputs) => {
+      const { options } = setup();
+      options.state.setProcessInput('amount', true);
+      options.state.setProcessInput('removedVariable', true);
+      const convert = jest.spyOn(conversion, 'bpmnToPn');
+      await buildDpnForConversion({ ...options, purpose });
+      expect(convert).toHaveBeenCalledWith(
+        options.bpmnModeler,
+        options.dmnModeler,
+        expect.any(Array),
+        expectedInputs,
+      );
+      expect(options.state.getInitialValues()).toEqual({ amount: '42' });
+    },
+  );
+
   afterEach(() => {
     jest.restoreAllMocks();
   });

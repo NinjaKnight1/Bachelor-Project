@@ -1,19 +1,54 @@
+html {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  border: 10px solid #4b6e83;
+  box-sizing: border-box;
+  height: 100vh;
+  height: 100dvh;
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) 30px;
+  transition: border-color 0.3s ease;
+}
+
+#main-frame {
+  display: grid;
+  min-width: 0;
+  min-height: 0;
+}
+
+#bpmn-container,
+#dmn-container {
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
+  gap: 8px;
+  min-width: 0;
+  min-height: 0;
+  padding: 10px;
+  box-sizing: border-box;
+  background: #fff;
+}
+
 .canvas {
-  height: calc(100vh - 95px);
-  min-height: 420px;
+  min-width: 0;
+  min-height: 0;
   width: auto;
 }
+
 #bpmn-workspace {
   display: flex;
-  width: 100%;
-  height: calc(100vh - 95px);
-  min-height: 420px;
+  min-width: 0;
+  min-height: 0;
   overflow: hidden;
 }
 
 #bpmn-canvas {
   flex: 1 1 auto;
   min-width: 0;
+  min-height: 0;
   height: 100%;
 }
 
@@ -26,40 +61,25 @@
   background: #fff;
 }
 
-
-html {
-  min-height: 100%;
+#dmn-canvas {
+  overflow: auto;
 }
 
-body {
+.editor-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.editor-toolbar>.button {
   margin: 0;
-  padding: 0;
-  border: 10px solid #4b6e83;
-  box-sizing: border-box;
-  min-height: 100vh;
-  transition: border-color 0.3s ease;
-}
-
-#main-frame {
-  min-height: 100vh;
-  padding-bottom: 70px;
-}
-
-#bpmn-container {
-  padding: 10px 10px 40px;
-  background: #fff;
-  box-sizing: border-box;
 }
 
 #bottom-bar {
-  position: fixed;
-  left: 0;
-  bottom: 0;
-  width: 100%;
   height: 30px;
   background: #4b6e83;
   transition: background-color 0.3s ease;
-  z-index: 2000;
 }
 
 .button {
@@ -347,8 +367,85 @@ select.button-upload option:disabled {
   background: #900;
 }
 
-.dmn-decision-table-container
-.model-feel-dmn-error {
+.dmn-decision-table-container .model-feel-dmn-error {
   background-color: rgba(198, 40, 40, .08);
   box-shadow: inset 0 0 0 2px #c62828;
+}
+
+.bio-properties-panel-entry[data-entry-id$="-process-input"] .bio-properties-panel-tooltip-wrapper {
+  display: block;
+  width: fit-content;
+  text-decoration: none;
+}
+
+.bio-properties-panel-entry[data-entry-id$="-process-input"] .bio-properties-panel-tooltip-wrapper::after {
+  content: "?";
+  display: inline-flex;
+  align-items: center;
+  vertical-align: text-bottom;
+  justify-content: center;
+  width: 1em;
+  height: 1em;
+  margin-left: 0.4em;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+  font-size: 0.85em;
+  line-height: 1;
+  cursor: help;
+}
+
+/* Variable headings and separators */
+.model-feel-variable-heading {
+  margin: 12px 32px 8px 12px;
+  padding: 0;
+  color: var(--text-color, #333);
+  font-size: 14px;
+  font-weight: 600;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.model-feel-variable-heading~.model-feel-variable-heading {
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid var(--input-border-color, #ddd);
+}
+
+/* Consistent labels above full-width controls */
+.bio-properties-panel-entry[data-entry-id^="model-feel-variable-"] .bio-properties-panel-label {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 12px;
+  font-weight: 400;
+  line-height: 1.4;
+}
+
+.bio-properties-panel-entry[data-entry-id^="model-feel-variable-"] select.bio-properties-panel-input,
+.bio-properties-panel-entry[data-entry-id^="model-feel-variable-"] input.bio-properties-panel-input:not([type="checkbox"]) {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Allow the longer checkbox label to wrap beside its checkbox */
+.bio-properties-panel-entry[data-entry-id$="-process-input"] {
+  margin-top: 10px;
+  margin-bottom: 12px;
+}
+
+.bio-properties-panel-entry[data-entry-id$="-process-input"] .bio-properties-panel-checkbox {
+  display: flex;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.bio-properties-panel-entry[data-entry-id$="-process-input"] .bio-properties-panel-checkbox>input {
+  flex: 0 0 auto;
+  margin: 3px 0 0;
+}
+
+.bio-properties-panel-entry[data-entry-id$="-process-input"] .bio-properties-panel-checkbox>.bio-properties-panel-label {
+  flex: 1;
+  min-width: 0;
+  margin: 0;
 }

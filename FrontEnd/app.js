@@ -1,3 +1,4 @@
+import { runSoundnessCheck } from './soundnessResult.ts';
 import 'bpmn-js/dist/assets/diagram-js.css';
 import 'bpmn-js/dist/assets/bpmn-js.css';
 import 'bpmn-js/dist/assets/bpmn-font/css/bpmn-embedded.css';
@@ -151,6 +152,7 @@ async function openDiagramDMN(
 ) {
   try {
     await dmnModeler.importXML(xml);
+    modelFeelAnalysisState.clearProcessInputs();
     console.log("DMN loaded.");
     await variablePanel.updateFromDMN();
 
@@ -544,9 +546,14 @@ function rightClickOnBPMN() {
 
 async function exportAndConvert() {
   try {
-    const dpn = await buildCurrentDpn(ConversionPurpose.ModelChecking);
-    const xmlString = dpnToPnmlFile(dpn);
-    const modelJson = dpnToModelCheckingFile(dpn);
+    const checkingDpn = await buildCurrentDpn(
+      ConversionPurpose.ModelChecking,
+    );
+    const pnmlDpn = await buildCurrentDpn(
+      ConversionPurpose.Pnml,
+    );
+    const xmlString = dpnToPnmlFile(pnmlDpn);
+    const modelJson = dpnToModelCheckingFile(checkingDpn);
 
     downloadXML("dpn.pnml", xmlString);
     downloadJSON("modelChecking.json", modelJson);
@@ -627,7 +634,7 @@ export async function goBackToBpmn() {
 
     document.getElementById(
       'bpmn-container'
-    ).style.display = 'block';
+    ).style.display = 'grid';
 
     activeTaskId = null;
   } catch (err) {

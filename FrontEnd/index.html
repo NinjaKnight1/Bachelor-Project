@@ -14,33 +14,39 @@
         <div id="bpmn-properties-panel"></div>
       </div>
 
-      <button id="export-button" class="button button-export">Export and Convert</button>
+      <div class="editor-toolbar">
+        <button id="export-button" class="button button-export">Export and Convert</button>
 
-      <input id="import-bpmn" type="file" accept=".bpmn" hidden>
-      <label class="button button-upload" for="import-bpmn">Upload BPMN</label>
+        <input id="import-bpmn" type="file" accept=".bpmn" hidden>
+        <label class="button button-upload" for="import-bpmn">Upload BPMN</label>
 
-      <input id="import-dmn" type="file" accept=".dmn" hidden />
-      <label class="button button-upload" for="import-dmn">Upload DMN</label>
+        <input id="import-dmn" type="file" accept=".dmn" hidden />
+        <label class="button button-upload" for="import-dmn">Upload DMN</label>
 
-      <button id="download-button" class="button button-download">Download BPMN and DMN</button>
+        <button id="download-button" class="button button-download">Download BPMN and DMN</button>
 
-      <button id="toggle-background-button" class="button button-background">Check Soundness</button>
+        <button id="toggle-background-button" class="button button-background">Check Soundness</button>
 
-      <button id="model-check-button" class="button button-model-check">Model check LTLf</button>
+        <button id="model-check-button" class="button button-model-check">Model check LTLf</button>
 
-      <select id="select-model" class="button button-upload">
-        <option value="" disabled selected>Choose a default model</option>
-        <option value="default">Default</option>
-        <option value="takeaway">Takeaway example</option>
-        <option value="parallel">Parallel example</option>
-        <option value="exclusive">Exclusive example</option>
-      </select>
+        <select id="select-model" class="button button-upload">
+          <option value="" disabled selected>Choose a default model</option>
+          <option value="default">Default</option>
+          <option value="takeaway">Takeaway example</option>
+          <option value="parallel">Parallel example</option>
+          <option value="exclusive">Exclusive example</option>
+        </select>
+      </div>
 
     </div>
 
     <div id="dmn-container" style="display: none;">
       <div class="canvas" id="dmn-canvas"></div>
-      <button class="button" id="dmn-back-button">Back to BPMN</button>
+      <div class="editor-toolbar">
+        <button class="button" id="dmn-back-button">
+          Back to BPMN
+        </button>
+      </div>
     </div>
 
     <!-- <div id="variable-panel" class="variable-panel">

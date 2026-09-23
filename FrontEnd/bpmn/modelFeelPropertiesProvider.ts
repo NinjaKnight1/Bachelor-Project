@@ -1,4 +1,7 @@
+import { createElement } from '@bpmn-io/properties-panel/preact';
+
 import {
+  CheckboxEntry,
   DescriptionEntry,
   Group,
   SelectEntry,
@@ -44,6 +47,10 @@ interface PropertiesPanelLike {
 }
 
 interface ModelFeelAnalysisStateLike {
+  getProcessInputs(): string[];
+  setProcessInput(variableName: string, enabled: boolean): void;
+  subscribeProcessInputs(listener: () => void): () => void;
+
   getResult(): ModelFeelAnalysisResult;
 
   subscribe(
@@ -133,6 +140,8 @@ interface ModelFeelErrorPropertiesPanelEntry {
 }
 
 type PropertiesPanelEntry =
+  | VariableHeadingPropertiesPanelEntry
+  | VariableProcessInputPropertiesPanelEntry
   | VariableTypePropertiesPanelEntry
   | VariableInitialValuePropertiesPanelEntry
   | ModelFeelErrorPropertiesPanelEntry;
@@ -168,6 +177,66 @@ interface VariableInitialValueEntryProps {
 }
 
 type Translate = (text: string) => string;
+
+interface VariableHeadingEntryProps {
+  id: string;
+  variable: ResolvedModelFeelVariable;
+}
+
+interface VariableHeadingPropertiesPanelEntry {
+  id: string;
+  component: (props: VariableHeadingEntryProps) => unknown;
+  variable: ResolvedModelFeelVariable;
+}
+
+export function VariableHeadingEntry({
+  id,
+  variable,
+}: VariableHeadingEntryProps): unknown {
+  return createElement(
+    'h3',
+    {
+      class: 'bio-properties-panel-entry model-feel-variable-heading',
+      'data-entry-id': id,
+    },
+    `${variable.name}:`,
+  );
+}
+
+interface VariableProcessInputEntryProps {
+  element: unknown;
+  id: string;
+  variable: ResolvedModelFeelVariable;
+  processInput: boolean;
+  setProcessInput: (enabled: boolean) => void;
+}
+
+interface VariableProcessInputPropertiesPanelEntry {
+  id: string;
+  component: (props: VariableProcessInputEntryProps) => unknown;
+  variable: ResolvedModelFeelVariable;
+  processInput: boolean;
+  setProcessInput: (enabled: boolean) => void;
+}
+
+export function VariableProcessInputEntry({
+  element,
+  id,
+  processInput,
+  setProcessInput,
+}: VariableProcessInputEntryProps): unknown {
+  return CheckboxEntry({
+    element,
+    id,
+    label: 'Allow any initial value for soundness check',
+    tooltip:
+      'Allows this variable to take any value of its type during soundness ' +
+      'checking. The assignment is added to the start-event transition and ' +
+      'occurs when it fires. Model checking uses the initial value entered above.',
+    getValue: () => processInput,
+    setValue: setProcessInput,
+  });
+}
 
 export function VariableTypeEntry({
   element,
@@ -210,7 +279,7 @@ export function VariableTypeEntry({
   return SelectEntry({
     element,
     id,
-    label: variable.name,
+    label: 'Type',
 
     getValue: () =>
       userType ??
@@ -247,7 +316,7 @@ export function VariableInitialValueEntry({
   return TextFieldEntry({
     element,
     id,
-    label: `${variable.name} initial value`,
+    label: 'Initial value',
     debounce,
 
     getValue: () => initialValue ?? '',
@@ -321,6 +390,13 @@ export class ModelFeelPropertiesProvider {
         );
       });
 
+    const unsubscribeProcessInputs =
+      analysisState.subscribeProcessInputs(() => {
+        eventBus.fire('propertiesPanel.providersChanged');
+      });
+
+    eventBus.on('diagram.destroy', unsubscribeProcessInputs);
+
     eventBus.on(
       'diagram.destroy',
       unsubscribe
@@ -347,11 +423,23 @@ export class ModelFeelPropertiesProvider {
       const initialValues =
         this.analysisState.getInitialValues();
 
+      const processInputs = new Set(
+        this.analysisState.getProcessInputs(),
+      );
+
       const entries =
         analysisResult
           .variables
           .flatMap(
             (variable): PropertiesPanelEntry[] => [
+              {
+                id:
+                  'model-feel-variable-' +
+                  encodeURIComponent(variable.name) +
+                  '-heading',
+                component: VariableHeadingEntry,
+                variable,
+              },
               {
                 id:
                   'model-feel-variable-' +
@@ -388,6 +476,18 @@ export class ModelFeelPropertiesProvider {
                     value
                   );
                 }
+              },
+              {
+                id:
+                  'model-feel-variable-' +
+                  encodeURIComponent(variable.name) +
+                  '-process-input',
+                component: VariableProcessInputEntry,
+                variable,
+                processInput: processInputs.has(variable.name),
+                setProcessInput: enabled => {
+                  this.analysisState.setProcessInput(variable.name, enabled);
+                },
               }
             ]
           );
@@ -399,11 +499,11 @@ export class ModelFeelPropertiesProvider {
 
       const errorEntries:
         ModelFeelErrorPropertiesPanelEntry[] =
-          errors.map((error, index) => ({
-            id: `model-feel-error-${index}`,
-            component: ModelFeelErrorEntry,
-            error
-          }));
+        errors.map((error, index) => ({
+          id: `model-feel-error-${index}`,
+          component: ModelFeelErrorEntry,
+          error
+        }));
 
       return [
         ...groups,

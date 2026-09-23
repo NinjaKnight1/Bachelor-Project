@@ -5,7 +5,8 @@ import { decisionDiagramFromBpmnAndDmn, DiagramDecision, DecisionTable, GateGuar
 async function bpmnToPn(
   bpmnModeler: any,
   dmnModeler: any,
-  variables: Variable[]
+  variables: Variable[],
+  processInputs: readonly string[] = [],
 ): Promise<DPN> {
 
   const diagramDecision: DiagramDecision = decisionDiagramFromBpmnAndDmn(
@@ -93,7 +94,7 @@ async function bpmnToPn(
           const startId = flowElement.id;
           const startName = flowElement.name ?? null;
 
-          dpn.addTransition(startId, startName);
+          dpn.addTransition(startId, startName, null, null, processInputs);
 
           const startOutgoingIdList = flowToId(flowElement.outgoing);
           startOutgoingIdList.forEach(outgoingId => {

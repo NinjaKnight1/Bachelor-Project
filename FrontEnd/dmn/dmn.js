@@ -34,7 +34,7 @@ export async function openTableFromTaskID(dmnModeler, decisionId, dmnDicisionTab
     }
     // Hiding the BPMN div and showing the DMN div
     document.getElementById('bpmn-container').style.display = 'none';
-    document.getElementById('dmn-container').style.display = 'block';
+    document.getElementById('dmn-container').style.display = 'grid';
 
 
 }

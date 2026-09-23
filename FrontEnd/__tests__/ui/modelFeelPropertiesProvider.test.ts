@@ -2,10 +2,13 @@ import {
   ModelFeelErrorEntry,
   ModelFeelPropertiesProvider,
   VariableInitialValueEntry,
+  VariableHeadingEntry,
+  VariableProcessInputEntry,
   VariableTypeEntry
 } from '../../bpmn/modelFeelPropertiesProvider';
 
 import {
+  CheckboxEntry,
   DescriptionEntry,
   SelectEntry,
   TextFieldEntry
@@ -16,6 +19,7 @@ import type {
 } from '../../modelFeelAnalysis';
 
 jest.mock('@bpmn-io/properties-panel', () => ({
+  CheckboxEntry: jest.fn((props: unknown) => props),
   DescriptionEntry: jest.fn(
     (props: unknown) => props
   ),
@@ -49,6 +53,24 @@ const EMPTY_RESULT: ModelFeelAnalysisResult = {
 };
 
 describe('modelFeelPropertiesProvider', () => {
+  test('connects the process-input checkbox to its setter', () => {
+    const setProcessInput = jest.fn();
+    const variable = {
+      name: 'Num',
+    } as Parameters<typeof VariableProcessInputEntry>[0]['variable'];
+    VariableProcessInputEntry({
+      element: {},
+      id: 'num-process-input',
+      variable,
+      processInput: true,
+      setProcessInput,
+    });
+    const props = jest.mocked(CheckboxEntry).mock.calls.at(-1)![0];
+    expect(props.getValue()).toBe(true);
+    props.setValue(false);
+    expect(setProcessInput).toHaveBeenCalledWith(false);
+  });
+
   function createProvider(
     result: ModelFeelAnalysisResult = EMPTY_RESULT,
     initialValues: Record<string, string> = {}
@@ -73,6 +95,9 @@ describe('modelFeelPropertiesProvider', () => {
     const unsubscribeInitialValues = jest.fn();
 
     const analysisState = {
+      getProcessInputs: jest.fn(() => [] as string[]),
+      setProcessInput: jest.fn(),
+      subscribeProcessInputs: jest.fn(() => jest.fn()),
       getResult: () => result,
       getUserTypes: jest.fn(() => ({})),
       setUserType: jest.fn(),
@@ -302,6 +327,11 @@ describe('modelFeelPropertiesProvider', () => {
 
     expect(variablesGroup.entries).toEqual([
       expect.objectContaining({
+        id: 'model-feel-variable-age-heading',
+        variable: result.variables[0],
+        component: VariableHeadingEntry,
+      }),
+      expect.objectContaining({
         id: 'model-feel-variable-age',
         variable: result.variables[0],
         component: VariableTypeEntry
@@ -314,11 +344,15 @@ describe('modelFeelPropertiesProvider', () => {
         component: VariableInitialValueEntry,
         initialValue: '18',
         setInitialValue: expect.any(Function)
+      }),
+      expect.objectContaining({
+        component: VariableProcessInputEntry,
+        processInput: false,
       })
     ]);
 
     const initialValueEntry =
-      variablesGroup.entries?.[1] as unknown as {
+      variablesGroup.entries?.[2] as unknown as {
         setInitialValue: (
           value: string | undefined
         ) => void;
@@ -455,7 +489,7 @@ describe('modelFeelPropertiesProvider', () => {
       textFieldEntry.mock.calls[0][0];
 
     expect(props.label).toBe(
-      'age initial value'
+      'Initial value'
     );
 
     expect(props.getValue()).toBe('18');

@@ -37,6 +37,37 @@ const EMPTY_RESULT: ModelFeelAnalysisResult = {
 };
 
 export class ModelFeelAnalysisState {
+  private processInputs = new Set<string>();
+
+  private readonly processInputsListeners = new Set<() => void>();
+
+  getProcessInputs(): string[] {
+    return [...this.processInputs];
+  }
+
+  setProcessInput(variableName: string, enabled: boolean): void {
+    if (this.processInputs.has(variableName) === enabled) return;
+    if (enabled) {
+      this.processInputs.add(variableName);
+    } else {
+      this.processInputs.delete(variableName);
+    }
+    this.processInputsListeners.forEach(listener => listener());
+  }
+
+  clearProcessInputs(): void {
+    if (this.processInputs.size === 0) return;
+    this.processInputs.clear();
+    this.processInputsListeners.forEach(listener => listener());
+  }
+
+  subscribeProcessInputs(listener: () => void): () => void {
+    this.processInputsListeners.add(listener);
+    return () => {
+      this.processInputsListeners.delete(listener);
+    };
+  }
+
   private result: ModelFeelAnalysisResult =
     EMPTY_RESULT;
 

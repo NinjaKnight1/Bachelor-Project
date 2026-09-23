@@ -1,4 +1,17 @@
 declare module '@bpmn-io/properties-panel' {
+  export interface CheckboxEntryProps {
+    tooltip?: string;
+    element: unknown;
+    id: string;
+    label: string;
+    description?: string;
+    getValue: () => boolean;
+    setValue: (value: boolean) => void;
+    disabled?: boolean;
+  }
+
+  export function CheckboxEntry(props: CheckboxEntryProps): unknown;
+
   export interface DebouncedFunction<
     TArgs extends unknown[],
     TResult
